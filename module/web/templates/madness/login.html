@@ -1,0 +1,44 @@
+{% extends 'madness/html5bp.html' %}
+
+{% block title %}{{_("Login")}} - {{super()}} {% endblock %}
+
+
+{% block head %}
+<link href="media/madness/css/signin.css" rel="stylesheet">
+<link rel="stylesheet" href="media/madness/css/login.css">
+
+<!--REACT-->
+<script src="media/madness/vendor/react-0.11.0/react.js"></script>
+<script src="media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
+
+<!--Login clases-->
+<script type="text/jsx" src="media/madness/js/login.jsx.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="site-wrapper">
+    <div class="site-wrapper-inner">
+        <div class="inner cover" id="login-form-content"></div>
+    </div>
+</div>
+
+<!--Init script-->
+<script type="text/jsx">
+    /** @jsx React.DOM */
+    React.renderComponent(
+      <LoginForm unameph='{{_("Username")}}' upassph='{{_("Password")}}'
+      />, $("#login-form-content").get(0)
+    );
+</script>
+
+
+{% if errors %}
+<p>{{_("Your username and password didn't match. Please try again.")}}</p>
+  {{ _("To reset your login data or add an user run:") }} <b> python pyLoadCore.py -u</b>
+{% endif %}
+
+</div>
+<br>
+
+{% endblock %}

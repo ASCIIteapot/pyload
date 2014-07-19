@@ -1,0 +1,13 @@
+.pyload-logo{
+    left: -100%;
+}
+
+.pyload-logo .logo-img{
+    max-width: 100px;
+}
+
+.pyload-logo .pyload-text{
+    font-size: 56px;
+    color: #ffffff;
+    font-family: sans-serif;
+}

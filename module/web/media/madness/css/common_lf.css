@@ -1,0 +1,6 @@
+/* Common custom look and fill */
+
+/* background for entry web-iface */
+body {
+    background: url("/media/madness/img/background-metal.gif") repeat-y fixed;
+}

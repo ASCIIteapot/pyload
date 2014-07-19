@@ -6,39 +6,34 @@
 {% block head %}
 <link href="media/madness/css/signin.css" rel="stylesheet">
 <link rel="stylesheet" href="media/madness/css/login.css">
-
-<!--REACT-->
-<script src="media/madness/vendor/react-0.11.0/react.js"></script>
-<script src="media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
-
-<!--Login clases-->
-<script type="text/jsx" src="media/madness/js/login.jsx.js"></script>
 {% endblock %}
 
 {% block content %}
-
+<script src="media/madness/js/login-form.js"></script>
 <div class="site-wrapper">
     <div class="site-wrapper-inner">
-        <div class="inner cover" id="login-form-content"></div>
+        <div class="inner cover" id="login-form-content">
+            <form class="form-signin" role="form" id="form-signin" method="post">
+                <input type="hidden" name="do" value="login" />
+                <div class="pyload-logo">
+                    <img src="media/madness/img/pyloadlogo-01.svg" class="logo-img"/>
+                    <span class="pyload-text">pyLoad</span>
+                </div>
+                <h2 class="form-signin-heading">Please sign in</h2>
+                <input class="form-control" placeholder='{{_("Username")}}'
+                name="username"
+                required="true" autofocus="" type="text"/>
+                <input class="form-control" placeholder='{{_("Password")}}'
+                name="password"
+                required="" type="password"/>
+                <div class="alert alert-danger hidden" role="alert" id="invalid-user-alert">
+                    <p>{{_("Your username and password didn't match. Please try again.")}}</p>
+                    {{ _("To reset your login data or add an user run:") }} <b> python pyLoadCore.py -u</b>
+                </div>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+            </form>
+        </div>
     </div>
 </div>
-
-<!--Init script-->
-<script type="text/jsx">
-    /** @jsx React.DOM */
-    React.renderComponent(
-      <LoginForm unameph='{{_("Username")}}' upassph='{{_("Password")}}'
-      />, $("#login-form-content").get(0)
-    );
-</script>
-
-
-{% if errors %}
-<p>{{_("Your username and password didn't match. Please try again.")}}</p>
-  {{ _("To reset your login data or add an user run:") }} <b> python pyLoadCore.py -u</b>
-{% endif %}
-
-</div>
-<br>
 
 {% endblock %}

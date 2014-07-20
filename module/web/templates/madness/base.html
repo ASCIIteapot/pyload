@@ -1,1 +1,122 @@
 {% extends 'madness/html5bp.html' %}
+
+{% block head %}
+<link href="media/madness/css/sticky-footer-navbar.css" rel="stylesheet">
+<script src="media/madness/vendor/react-0.11.0/react.js"></script>
+<script src="media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a href="#" class="navbar-brand">
+                <div class="pyload-logo">
+                    <img src="media/madness/img/pyloadlogo-01.svg" class="logo-img"/>
+                    <span class="pyload-text">pyLoad</span>
+                </div>
+            </a>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only" data-replace-tmp-key="6c7195551da0802a39b5e2bc7187df54"><os-p key="6c7195551da0802a39b5e2bc7187df54">Включить навигацию</os-p></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <div class="navbar-collapse collapse in" id="navbar"></div>
+        <!--/.nav-collapse -->
+    </div>
+</div>
+
+<script type="text/jsx">
+/** @jsx React.DOM */
+
+var MenuItem = React.createClass({
+  render: function() {
+    return (
+        <li className={this.props.isactive ? 'active' : ''} >
+            <a href={this.props.link} >
+                <div className="navbar-item">
+                    <img src={this.props.icon} className="icon"/>
+                    <span className="text">{this.props.text}</span>
+                </div>
+            </a>
+        </li>
+    );
+  }
+});
+
+var Menu = React.createClass({
+    render: function(){
+        var convertedNodes=[];
+
+        this.props.items.forEach(function(item){
+            convertedNodes.push(<MenuItem
+                isactive={item.active}
+                icon={item.icon}
+                text={item.text}
+                link={item.link}
+            />);
+        });
+
+        return (<ul className={this.props.isright == 'true' ? "nav navbar-nav navbar-right" : "nav navbar-nav" }>
+                    {convertedNodes}
+                </ul>);
+    }
+});
+
+var mainItems=[
+    {
+        active: true,
+        icon: "media/madness/img/dwelling1.svg",
+        text: '{{_("Home")}}',
+        link: "/"
+    },
+    {
+        active: false,
+        link: "/queue/",
+        icon: "media/madness/img/chronometer5.svg",
+        text: '{{_("Queue")}}'
+    },
+    {
+        active: false,
+        link: "/collector/",
+        icon: "media/madness/img/listing1.svg",
+        text: '{{_("Collector")}}'
+    },
+    {
+        active: false,
+        link: "/downloads/",
+        icon: "media/madness/img/download60.svg",
+        text: '{{_("Downloads")}}'
+    },
+]
+
+// aux items
+var auxItems=[
+    {
+        active: false,
+        icon: "media/madness/img/seo2.svg",
+        text: '{{_("Logs")}}',
+        link: "/logs/"
+    },
+    {
+        active: false,
+        icon: "media/madness/img/setting.svg",
+        text: '{{_("Config")}}',
+        link: "/settings/"
+    },
+]
+
+var indiv = React.createClass({
+    render: function(){
+        return (<div><Menu items={mainItems} isright='false'/> <Menu items={auxItems} isright='true'/></div>);
+    }
+});
+
+
+React.renderComponent(<indiv/> ,document.getElementById('navbar'));
+
+</script>
+{% endblock %}

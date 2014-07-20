@@ -4,3 +4,20 @@
 body {
     background: url("/media/madness/img/background-metal.gif") repeat-y fixed;
 }
+
+/*navbar logo*/
+
+.navbar-header .pyload-logo .logo-img{
+    max-width: 20px;
+}
+
+/*.navbar-header > .pyload-logo .pyload-text{*/
+    /*font-size: 36px;*/
+    /*color: #000000;*/
+    /*font-family: sans-serif;*/
+/*}*/
+
+.navbar-item > .icon{
+    max-width: 20px;
+    margin-bottom: 5px;
+}

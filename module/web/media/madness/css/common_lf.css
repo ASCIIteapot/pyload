@@ -17,7 +17,17 @@ body {
     /*font-family: sans-serif;*/
 /*}*/
 
+.navbar-item{
+    /* запрещаем переносить содержимое на новую строку */
+    display: table;
+}
+
+.navbar-item > *{
+    display: table-cell;
+    vertical-align: middle;
+}
+
 .navbar-item > .icon{
-    max-width: 20px;
-    margin-bottom: 5px;
+    max-height: 20px;
+    margin-right: 5px;
 }

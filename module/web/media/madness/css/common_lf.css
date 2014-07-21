@@ -36,3 +36,10 @@ body {
 .navbar-item > .caret{
     margin-left: 5px;
 }
+
+.main-container{
+    /* Fallback for web browsers that doesn't support RGBa */
+	background: rgb(255, 255, 255);
+	/* RGBa with 0.6 opacity */
+	background: rgba(255, 255, 255, 1);
+}

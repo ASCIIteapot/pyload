@@ -5,9 +5,13 @@
 
 var MenuItem = React.createClass({
   render: function() {
+    var cx = React.addons.classSet;
+    var classes = cx(this.props.classes);
     return (
-        <li className={this.props.isactive ? 'active' : ''} >
-            <a href={this.props.link} >
+        <li className={classes} >
+            <a href={this.props.link}
+                action={this.props.action}
+               className={this.props.class} >
                 <div className="navbar-item">
                     <img src={this.props.icon} className="icon"/>
                     <span className="text">{this.props.text}</span>
@@ -42,7 +46,7 @@ var DropdownMenuItem = React.createClass({
   }
 });
 
-function createSingleMenuItem(item){
+function createSingleMenuItem(item, additionalClases = null){
     if ('items' in item){
         // is dropdown
         return (<DropdownMenuItem
@@ -54,8 +58,21 @@ function createSingleMenuItem(item){
     }
     else{
         // ordinal item
+
+        var classes = {
+            'active': item.active,
+            'action': item.action != null
+        };
+
+        if(item.action != null){
+            classes[item.action]=true;
+        }
+
+        $.extend(classes, additionalClases);
+
         return (<MenuItem
-                isactive={item.active}
+                action={'action' in item ? item.action : null}
+                classes={classes}
                 icon={item.icon}
                 text={item.text}
                 link={item.link}/>);

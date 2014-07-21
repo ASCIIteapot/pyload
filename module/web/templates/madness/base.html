@@ -1,16 +1,24 @@
 {% extends 'madness/html5bp.html' %}
 
 {% block head %}
+{{ super() }}
 <link href="/media/madness/css/sticky-footer-navbar.css" rel="stylesheet">
-<script src="/media/madness/vendor/react-0.11.0/react.js"></script>
+
+<!--<script src="/media/madness/vendor/react-0.11.0/react.js"></script>-->
+<script src="/media/madness/vendor/react-0.11.0/react-with-addons.js"></script>
 <script src="/media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
-<script type="text/jsx" src="/media/madness/js/base.jsx.js"></script>
+
+<script src="/media/madness/vendor/require-2.1.14/require.js"></script>
+
+<script type="text/jsx" src="/media/madness/js/base/base.jsx.js"></script>
 {% endblock %}
 
 {% block content %}
+<script src="/media/madness/js/base/base-logic.js"></script>
 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container main-container">
+    <div id="actions-control" class="actions-control"></div>
     <h1 class="page-header">{% block subtitle %}pyLoad - {{_("Webinterface")}}{% endblock %}</h1>
 
     {% block container_content %}
@@ -26,6 +34,36 @@
 {%- endmacro %}
 
 <script>
+var actionsList=[
+        {
+            active: false,
+            link: "#",
+            action: 'play',
+            icon: "/media/madness/img/play26.svg",
+            text: '{{_("Start")}}'
+        },
+        {
+            active: false,
+            link: "#",
+            action: 'stop',
+            icon: "/media/madness/img/stop8.svg",
+            text: '{{_("Stop")}}'
+        },
+        {
+            active: false,
+            link: "#",
+            action: 'cancel',
+            icon: "/media/madness/img/x2.svg",
+            text: '{{_("Cancel")}}'
+        },
+        {
+            active: false,
+            link: "#",
+            action: 'add',
+            icon: "/media/madness/img/download61.svg",
+            text: '{{_("Add")}}'
+        }
+];
 var mainItems=[
     {
         active: {{ selected('home') }},
@@ -56,36 +94,7 @@ var mainItems=[
         link: "#",
         icon: null,
         text: 'Действия',
-        items:[
-                {
-                    active: false,
-                    link: "#",
-                    action: 'play',
-                    icon: "/media/madness/img/play26.svg",
-                    text: '{{_("Start")}}'
-                },
-                {
-                    active: false,
-                    link: "#",
-                    action: 'stop',
-                    icon: "/media/madness/img/stop8.svg",
-                    text: '{{_("Stop")}}'
-                },
-                {
-                    active: false,
-                    link: "#",
-                    action: 'cancel',
-                    icon: "/media/madness/img/x2.svg",
-                    text: '{{_("Cancel")}}'
-                },
-                {
-                    active: false,
-                    link: "#",
-                    action: 'add',
-                    icon: "/media/madness/img/download61.svg",
-                    text: '{{_("Add")}}'
-                }
-        ]
+        items: actionsList
     }
 ]
 
@@ -153,8 +162,19 @@ var indiv = (<div className="container">
                 </div>
             </div>
             );
+React.renderComponent(indiv ,document.getElementById('navbar'), function(){$('.action').click(onActionClick)});
+</script>
 
+<script type="text/jsx">
+/** @jsx React.DOM */
+var items = actionsList.map(function(item){
+        return createSingleMenuItem(item, additionalClases = {'list-group-item': true})
+    });
 
-React.renderComponent(indiv ,document.getElementById('navbar'));
+var ent=
+(
+    <ul className="list-group">{items}</ul>
+);
+React.renderComponent(ent ,$('#actions-control').get(0), function(){$('.action').click(onActionClick)});
 </script>
 {% endblock %}

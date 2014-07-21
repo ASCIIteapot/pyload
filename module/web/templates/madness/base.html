@@ -1,15 +1,23 @@
 {% extends 'madness/html5bp.html' %}
 
 {% block head %}
-<link href="media/madness/css/sticky-footer-navbar.css" rel="stylesheet">
-<script src="media/madness/vendor/react-0.11.0/react.js"></script>
-<script src="media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
+<link href="/media/madness/css/sticky-footer-navbar.css" rel="stylesheet">
+<script src="/media/madness/vendor/react-0.11.0/react.js"></script>
+<script src="/media/madness/vendor/react-0.11.0/JSXTransformer.js"></script>
 {% endblock %}
 
 {% block content %}
 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container"></div>
+
+{% macro selected(name) -%}
+    {% if (name in url) or (name=='home' and isroot)  -%}
+        true
+    {%else%}
+        false
+    {%- endif %}
+{%- endmacro %}
 
 <script type="text/jsx">
 /** @jsx React.DOM */
@@ -29,17 +37,57 @@ var MenuItem = React.createClass({
   }
 });
 
+var DropdownMenuItem = React.createClass({
+  render: function() {
+    var convertedNodes=[];
+
+    this.props.items.forEach(function(item){
+        convertedNodes.push(createSingleMenuItem(item));
+    });
+
+    return (
+        <li className='dropdown' >
+            <a href='#' className="dropdown-toggle"
+                data-toggle="dropdown" data-replace-tmp-key="6be2458a7786d2dfdb6b72d7583e8104">
+                <div className="navbar-item">
+                    <img src={this.props.icon} className={this.props.icon!=null ? "icon" : "hidden" }/>
+                    <span className="text">{this.props.text}</span>
+                    <span className="caret"></span>
+                </div>
+            </a>
+            <ul className="dropdown-menu" role="menu">{convertedNodes}</ul>
+        </li>
+    );
+  }
+});
+
+function createSingleMenuItem(item){
+    if ('items' in item){
+        // is dropdown
+        return (<DropdownMenuItem
+                isactive={item.active}
+                icon={item.icon}
+                text={item.text}
+                link={item.link}
+                items={item.items}/>);
+    }
+    else{
+        // ordinal item
+        return (<MenuItem
+                isactive={item.active}
+                icon={item.icon}
+                text={item.text}
+                link={item.link}/>);
+    }
+}
+
+
 var Menu = React.createClass({
     render: function(){
         var convertedNodes=[];
 
         this.props.items.forEach(function(item){
-            convertedNodes.push(<MenuItem
-                isactive={item.active}
-                icon={item.icon}
-                text={item.text}
-                link={item.link}
-            />);
+            convertedNodes.push(createSingleMenuItem(item));
         });
 
         return (<ul className={this.props.isright == 'true' ? "nav navbar-nav navbar-right" : "nav navbar-nav" }>
@@ -50,28 +98,64 @@ var Menu = React.createClass({
 
 var mainItems=[
     {
-        active: true,
-        icon: "media/madness/img/dwelling1.svg",
+        active: {{ selected('home') }},
+        icon: "/media/madness/img/dwelling1.svg",
         text: '{{_("Home")}}',
         link: "/"
     },
     {
-        active: false,
+        active: {{ selected('queue') }},
         link: "/queue/",
-        icon: "media/madness/img/chronometer5.svg",
+        icon: "/media/madness/img/chronometer5.svg",
         text: '{{_("Queue")}}'
     },
     {
-        active: false,
+        active: {{ selected('collector') }},
         link: "/collector/",
-        icon: "media/madness/img/listing1.svg",
+        icon: "/media/madness/img/listing1.svg",
         text: '{{_("Collector")}}'
     },
     {
-        active: false,
+        active: {{ selected('downloads') }},
         link: "/downloads/",
-        icon: "media/madness/img/download60.svg",
+        icon: "/media/madness/img/download60.svg",
         text: '{{_("Downloads")}}'
+    },
+    {
+        active: false,
+        link: "#",
+        icon: null,
+        text: 'Действия',
+        items:[
+                {
+                    active: false,
+                    link: "#",
+                    action: 'play',
+                    icon: "/media/madness/img/play26.svg",
+                    text: '{{_("Start")}}'
+                },
+                {
+                    active: false,
+                    link: "#",
+                    action: 'stop',
+                    icon: "/media/madness/img/stop8.svg",
+                    text: '{{_("Stop")}}'
+                },
+                {
+                    active: false,
+                    link: "#",
+                    action: 'cancel',
+                    icon: "/media/madness/img/x2.svg",
+                    text: '{{_("Cancel")}}'
+                },
+                {
+                    active: false,
+                    link: "#",
+                    action: 'add',
+                    icon: "/media/madness/img/download61.svg",
+                    text: '{{_("Add")}}'
+                }
+        ]
     },
 ]
 
@@ -79,13 +163,38 @@ var mainItems=[
 var auxItems=[
     {
         active: false,
-        icon: "media/madness/img/seo2.svg",
+        icon: "/media/madness/img/male18.svg",
+        text: '{{user.name}}',
+        items :[
+            {
+                active: false,
+                icon: "/media/madness/img/enter3.svg",
+                text: '{{_("Logout")}}',
+                link: "/logout"
+            },
+            {
+                active: false,
+                icon: "/media/madness/img/male66.svg",
+                text: '{{_("Administrate")}}',
+                link: "/admin"
+            },
+            {
+                active: false,
+                icon: "/media/madness/img/information38.svg",
+                text: '{{_("Info")}}',
+                link: "/info"
+            }
+        ]
+    },
+    {
+        active: {{ selected('logs') }},
+        icon: "/media/madness/img/seo2.svg",
         text: '{{_("Logs")}}',
         link: "/logs/"
     },
     {
-        active: false,
-        icon: "media/madness/img/setting.svg",
+        active: {{ selected('settings') }},
+        icon: "/media/madness/img/setting.svg",
         text: '{{_("Config")}}',
         link: "/settings/"
     },
@@ -98,7 +207,7 @@ var indiv = React.createClass({
                 <div className="navbar-header">
                     <a href="#" className="navbar-brand">
                         <div className="pyload-logo">
-                            <img src="media/madness/img/pyloadlogo-01.svg" className="logo-img"></img>
+                            <img src="/media/madness/img/pyloadlogo-01.svg" className="logo-img"></img>
                             <span className="pyload-text">pyLoad</span>
                         </div>
                     </a>

@@ -58,12 +58,18 @@ def pre_processor():
             if info["pyload"] == "True": update = True
             if info["plugins"] == "True": plugins = True
 
+    # dirty hack, must know is this page root or not
+    def isroot():
+        from urlparse import urlparse
+        path = urlparse(request.url).path
+        return not path or path == '/'
 
     return {"user": user,
             'status': status,
             'captcha': captcha,
             'perms': perms,
             'url': request.url,
+            'isroot': isroot(),
             'update': update,
             'plugins': plugins}
 

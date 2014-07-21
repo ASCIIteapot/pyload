@@ -29,5 +29,10 @@ body {
 
 .navbar-item > .icon{
     max-height: 20px;
+    min-width: 30px;
     margin-right: 5px;
+}
+
+.navbar-item > .caret{
+    margin-left: 5px;
 }

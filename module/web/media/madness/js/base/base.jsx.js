@@ -8,9 +8,8 @@ var MenuItem = React.createClass({
     var cx = React.addons.classSet;
     var classes = cx(this.props.classes);
     return (
-        <li className={classes} >
+        <li className={classes} action={this.props.action}>
             <a href={this.props.link}
-                action={this.props.action}
                className={this.props.class} >
                 <div className="navbar-item">
                     <img src={this.props.icon} className="icon"/>
@@ -91,5 +90,45 @@ var Menu = React.createClass({
         return (<ul className={this.props.isright == 'true' ? "nav navbar-nav navbar-right" : "nav navbar-nav" }>
                     {convertedNodes}
                 </ul>);
+    }
+});
+
+
+/*
+* server status control
+* */
+
+var ServerStatusControl = React.createClass({
+    render: function(){
+        var serverActive=true;
+
+        var filteredActionsList=actionsList.filter(function(item){
+            if(serverActive){
+                return item.action!='play';
+            }
+            else{
+                return item.action!='stop';
+            }
+        });
+
+        var serverStatusItems = filteredActionsList.map(function(item){
+            return createSingleMenuItem(item, additionalClases = {'controls-group-item': true})
+        });
+
+        var headerItem = (<li className="header">
+                            <span>{serverActive ? 'Сервер запущен' : 'Сервер остановлен'}</span>
+                          </li>);
+
+        serverStatusItems.splice(0, 0, headerItem);
+
+        var cx = React.addons.classSet;
+        var classes = cx({
+            'actions-control': true,
+            'server-active': serverActive
+        });
+
+        return (<div className={classes}>
+                    <ul className="controls-group">{serverStatusItems}</ul>
+                </div>);
     }
 });

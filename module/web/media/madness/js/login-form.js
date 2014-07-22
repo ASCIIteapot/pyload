@@ -24,7 +24,7 @@ $(document).ready( function() {
             else{
                 // login data is correct
                 // process for submit
-                console.message('login success');
+                console.log('login success');
                 form.target.submit();
             }
         });

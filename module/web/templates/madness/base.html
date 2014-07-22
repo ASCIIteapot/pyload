@@ -18,7 +18,9 @@
 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container main-container">
-    <div id="actions-control" class="actions-control"></div>
+    <div class="row-fluid">
+        <div id="actions-control" class="col-md-6"></div>
+    </div>
     <h1 class="page-header">{% block subtitle %}pyLoad - {{_("Webinterface")}}{% endblock %}</h1>
 
     {% block container_content %}
@@ -162,19 +164,17 @@ var indiv = (<div className="container">
                 </div>
             </div>
             );
-React.renderComponent(indiv ,document.getElementById('navbar'), function(){$('.action').click(onActionClick)});
+function subscribeOnActionClick(elem){
+    return function(){
+        $(elem).find('.action').click(onActionClick);
+    }
+}
+React.renderComponent(indiv ,document.getElementById('navbar'),
+            subscribeOnActionClick($('#navbar')));
 </script>
 
 <script type="text/jsx">
 /** @jsx React.DOM */
-var items = actionsList.map(function(item){
-        return createSingleMenuItem(item, additionalClases = {'list-group-item': true})
-    });
-
-var ent=
-(
-    <ul className="list-group">{items}</ul>
-);
-React.renderComponent(ent ,$('#actions-control').get(0), function(){$('.action').click(onActionClick)});
+React.renderComponent(<ServerStatusControl/> ,$('#actions-control').get(0), subscribeOnActionClick($('#actions-control')));
 </script>
 {% endblock %}

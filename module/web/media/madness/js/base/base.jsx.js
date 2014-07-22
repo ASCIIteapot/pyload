@@ -99,8 +99,29 @@ var Menu = React.createClass({
 * */
 
 var ServerStatusControl = React.createClass({
+    getInitialState: function() {
+        return {data: []};
+    },
+
+    componentDidMount: function() {
+        this.loadCommentsFromServer();
+        setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+    },
+
+    loadCommentsFromServer: function(){
+        $.ajax({
+          url: this.props.url,
+          dataType: 'json',
+          success: function(data) {
+            this.setState(data);
+          }.bind(this),
+          error: function(xhr, status, err) {
+            console.error(this.props.url, status, err.toString());
+          }.bind(this)
+        });
+    },
     render: function(){
-        var serverActive=true;
+        var serverActive=! this.state.pause;
 
         var filteredActionsList=actionsList.filter(function(item){
             if(serverActive){
@@ -122,13 +143,42 @@ var ServerStatusControl = React.createClass({
         serverStatusItems.splice(0, 0, headerItem);
 
         var cx = React.addons.classSet;
-        var classes = cx({
+        var classesControls = cx({
             'actions-control': true,
             'server-active': serverActive
         });
 
-        return (<div className={classes}>
-                    <ul className="controls-group">{serverStatusItems}</ul>
+        var classesActiveState = cx({
+            'server-status-info': true
+        });
+
+        return (<div className="row server-status">
+                    <div className='col-md-5'>
+                        <div className={classesControls}>
+                            <ul className="controls-group">{serverStatusItems}</ul>
+                        </div>
+                    </div>
+                    <div className='col-md-4'>
+                        <div className={classesActiveState}>
+                            <ul className="controls-group">
+                                <li className='download-count-group' rel="tooltip"
+                                data-toggle="tooltip" data-placement="bottom" title="Tooltip on bottom">
+                                    <span>
+                                        {this.props.l18n.active}
+                                        <span className='download-count'>{this.state.active}</span>
+                                        / {this.props.l18n.queued}
+                                        <span className='download-count'>{this.state.queue}</span>
+                                        / {this.props.l18n.total}
+                                        <span className='download-count'>{this.state.total}</span>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span>{this.props.l18n.speed} </span>
+                                    <span className='speed'>{this.state.speed}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>);
     }
 });

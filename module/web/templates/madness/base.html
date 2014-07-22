@@ -18,9 +18,7 @@
 
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container main-container">
-    <div class="row-fluid">
-        <div id="actions-control" class="col-md-6"></div>
-    </div>
+    <div id="actions-control"></div>
     <h1 class="page-header">{% block subtitle %}pyLoad - {{_("Webinterface")}}{% endblock %}</h1>
 
     {% block container_content %}
@@ -164,10 +162,12 @@ var indiv = (<div className="container">
                 </div>
             </div>
             );
+
 function subscribeOnActionClick(elem){
     return function(){
+        $("[rel=tooltip]", $(elem)).tooltip();
         $(elem).find('.action').click(onActionClick);
-    }
+    };
 }
 React.renderComponent(indiv ,document.getElementById('navbar'),
             subscribeOnActionClick($('#navbar')));
@@ -175,6 +175,17 @@ React.renderComponent(indiv ,document.getElementById('navbar'),
 
 <script type="text/jsx">
 /** @jsx React.DOM */
-React.renderComponent(<ServerStatusControl/> ,$('#actions-control').get(0), subscribeOnActionClick($('#actions-control')));
+// localisation
+var serverStatusl18n={
+    'download': '{{_("Download:")}}',
+    'reconnect': '{{_("Reconnect:")}}',
+    'speed': '{{_("Speed:")}}',
+    'active': '{{_("Active:")}}',
+    'queued': '{{_("Queued:")}}',
+    'total': '{{_("Total:")}}'
+}
+
+React.renderComponent(<ServerStatusControl pollInterval={2000} url='/json/status' l18n={serverStatusl18n}/> ,
+        $('#actions-control').get(0), subscribeOnActionClick($('#actions-control')));
 </script>
 {% endblock %}

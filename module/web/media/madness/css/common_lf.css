@@ -48,7 +48,7 @@ body {
  *  actions-control
  */
 
-.actions-control.server-active{
+.actions-control.server-active, .server-status-info{
     background: #EEEEEE;
 }
 
@@ -56,14 +56,16 @@ body {
     background: #FFFFB0;
 }
 
-.actions-control ul.controls-group{
+ul.controls-group{
     margin: 0; /* Обнуляем значение отступов */
     padding: 0px; /* Значение полей */
+    display: flex;
+    justify-content: space-between;
 }
 
-.actions-control ul.controls-group li{
+ul.controls-group li{
     display: inline-flex; /* Отображать как строчный элемент */
-    justify-content: center;
+    /*justify-content: center;*/
     margin-right: 5px; /* Отступ слева */
     /*border: 1px solid #000; *//* Рамка вокруг текста */
     padding: 5px; /* Поля вокруг текста */
@@ -82,6 +84,19 @@ body {
     background: #F0F066;
 }
 
+.actions-control.server-active ul.controls-group li.controls-group-item:hover{
+    background: aliceblue;
+}
+
 .actions-control ul.controls-group li.controls-group-item:last-child{
     margin-right: 0px; /* Отступ слева */
+}
+
+.server-status-info .download-count-group .download-count,
+.server-status-info .speed
+{
+    font-weight: 700;
+    margin-right: 3px;
+    margin-left: 3px;
+    color: #000000;
 }

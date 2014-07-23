@@ -161,15 +161,26 @@ var ServerStatusControl = React.createClass({
                     <div className='col-md-4'>
                         <div className={classesActiveState}>
                             <ul className="controls-group">
-                                <li className='download-count-group' rel="tooltip"
-                                data-toggle="tooltip" data-placement="bottom" title="Tooltip on bottom">
+                                <li className='download-count-group'>
                                     <span>
                                         {this.props.l18n.active}
                                         <span className='download-count'>{this.state.active}</span>
-                                        / {this.props.l18n.queued}
-                                        <span className='download-count'>{this.state.queue}</span>
-                                        / {this.props.l18n.total}
-                                        <span className='download-count'>{this.state.total}</span>
+                                        /
+                                        <span   className='download-count'
+                                                rel="tooltip"
+                                                data-toggle="tooltip"
+                                                data-placement="bottom"
+                                                title={this.props.l18n.queued}>
+                                            {this.state.queue}
+                                        </span>
+                                        /
+                                        <span   className='download-count'
+                                                rel="tooltip"
+                                                data-toggle="tooltip"
+                                                data-placement="bottom"
+                                                title={this.props.l18n.total}>
+                                            {this.state.total}
+                                        </span>
                                     </span>
                                 </li>
                                 <li>

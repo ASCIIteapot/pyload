@@ -8,7 +8,9 @@ var MenuItem = React.createClass({
     var cx = React.addons.classSet;
     var classes = cx(this.props.classes);
     return (
-        <li className={classes} action={this.props.action}>
+        <li className={classes}
+            data-action={this.props.action}
+            onClick={onActionClick}>
             <a href={this.props.link}
                className={this.props.class} >
                 <div className="navbar-item">
@@ -153,7 +155,7 @@ var ServerStatusControl = React.createClass({
         });
 
         return (<div className="row server-status">
-                    <div className='col-md-5'>
+                    <div className='col-md-6'>
                         <div className={classesControls}>
                             <ul className="controls-group">{serverStatusItems}</ul>
                         </div>

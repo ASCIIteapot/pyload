@@ -166,7 +166,7 @@ var indiv = (<div className="container">
 function subscribeOnActionClick(elem){
     return function(){
         $("[rel=tooltip]", $(elem)).tooltip();
-        $(elem).find('.action').click(onActionClick);
+        //$(elem).find('.action').click(onActionClick);
     };
 }
 React.renderComponent(indiv ,document.getElementById('navbar'),

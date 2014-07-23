@@ -31,7 +31,7 @@
                              style="cursor:pointer; vertical-align: text-bottom;" onclick="parseUri()"/>
                         </span>
                     </div>
-                    <textarea required="true" class="form-control" rows="3" name="add_links" id="add_links"></textarea>
+                    <div id="add_package_links_aria"></div>
                 </div>
 
                 <div class="form-group">
@@ -75,3 +75,14 @@
         </div>
     </form>
 </div>
+
+<script type="text/jsx">
+/** @jsx React.DOM */
+
+var links_l18n={
+    links: '{{_("Links")}}'
+}
+
+React.renderComponent(<LinksInputElement l18n={links_l18n}/>, $('#add_package_links_aria').get(0));
+
+</script>

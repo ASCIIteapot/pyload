@@ -149,6 +149,13 @@ def link_order(ids):
     except:
         return HTTPError()
 
+@route("/json/parse_urls", method="POST")
+def parse_urls():
+    """
+    Method parses source text and extract urls from em
+    return: list og tuples (url, pos in src text, hoster, status, ...etc)
+    """
+    pass
 
 @route("/json/add_package")
 @route("/json/add_package", method="POST")

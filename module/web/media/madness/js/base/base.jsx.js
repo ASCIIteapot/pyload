@@ -3,6 +3,10 @@
  * Created by Developer on 21.07.14.
  */
 
+/*
+ * Main app menu
+ */
+
 var MenuItem = React.createClass({
   render: function() {
     var cx = React.addons.classSet;

@@ -155,7 +155,7 @@ var ServerStatusControl = React.createClass({
         });
 
         return (<div className="row server-status">
-                    <div className='col-md-6'>
+                    <div className='col-md-5'>
                         <div className={classesControls}>
                             <ul className="controls-group">{serverStatusItems}</ul>
                         </div>

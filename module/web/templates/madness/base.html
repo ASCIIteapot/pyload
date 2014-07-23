@@ -25,6 +25,14 @@
     {% endblock %}
 </div>
 
+<!-- Modal -->
+{% include "madness/window.html" %}
+<div style="display: none;">
+    {# {% include "default/captcha.html" %} #}
+    {% block hidden %}
+    {% endblock %}
+</div>
+
 {% macro selected(name) -%}
     {% if (name in url) or (name=='home' and isroot)  -%}
         true

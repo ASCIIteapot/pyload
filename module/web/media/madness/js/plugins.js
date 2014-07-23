@@ -22,6 +22,7 @@
 }());
 
 // Place any jQuery/helper plugins in here.
+// $('.btn').button();
 
 String.prototype.format = function () {
   var args = arguments;

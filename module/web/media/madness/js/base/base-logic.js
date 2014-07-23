@@ -16,8 +16,8 @@ function DoAsyncRequest(ajaxParams, description){
     $.ajax(wajax).done(function(){console.log('request '+description+' done')});
 }
 
-function onActionClick(){
-    var action_type=$(this).attr('data-action');
+function onActionClick(elem){
+    var action_type = $(elem.currentTarget).attr('data-action');
 
     var action_type_map={
         play:    "/api/unpauseServer",
@@ -33,4 +33,25 @@ function onActionClick(){
 
         DoAsyncRequest(req_params, 'action: '+action_type)
     }
+    else{
+        if(action_type == 'add'){
+            $('#add_package_modal').modal();
+        }
+    }
 }
+
+/*
+* clear add package input valies on show
+* */
+$(function(){
+        $('#add_package_modal').on('show.bs.modal', function (e) {
+            console.log('add_package_modal show.bs.modal');
+            $('form', this).each(function(){
+                // reset form inputs
+                this.reset();
+                // reset all radiobutton
+                $(this).button('reset');
+            });
+        });
+    }
+);

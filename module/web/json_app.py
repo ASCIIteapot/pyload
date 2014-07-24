@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
 from os.path import join
 from traceback import print_exc
 from shutil import copyfileobj
@@ -149,13 +150,18 @@ def link_order(ids):
     except:
         return HTTPError()
 
+_url_patter = re.compile(r"((ht|f)tp(s?)://\S+)", re.IGNORECASE)
 @route("/json/parse_urls", method="POST")
 def parse_urls():
     """
     Method parses source text and extract urls from em
     return: list og tuples (url, pos in src text, hoster, status, ...etc)
     """
-    pass
+
+    raw_text = request.json['raw_text']
+    urls = [url.group(0) for url in _url_patter.finditer(raw_text)]
+    ret_urls = [{'url': purl[0], 'plugin': purl[1]} for purl in PYLOAD.core.pluginManager.parseUrls(urls)]
+    return {'urls': ret_urls}
 
 @route("/json/add_package")
 @route("/json/add_package", method="POST")

@@ -2,18 +2,24 @@
  * Created by Developer on 21.07.14.
  */
 
-/*
-* Do async request to server, in success or fail events show message with provided description*/
-function DoAsyncRequest(ajaxParams, description){
-    var wajax={
-        beforeSend: function(){
-            console.log('Sending command: '+description);
-        }
+function DoAjaxJsonRequest(ajaxArguments, callDescription = null){
+    var ajax_params = {
+            method: 'POST',
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8"
     };
 
-    $.extend(wajax, ajaxParams);
+    $.extend(ajax_params, ajaxArguments);
 
-    $.ajax(wajax).done(function(){console.log('request '+description+' done')});
+    ajax_params.data = JSON.stringify(ajax_params.data);
+
+    return $.ajax(ajax_params)
+        .done(function( data, textStatus, jqXHR ) {
+            console.log('Ajax ssly complited for ', callDescription, '; ', this.url);
+        })
+        .fail(function( jqXHR, status, err ) {
+            console.error('Ajax filed for ', callDescription, '; ', this.url, status, err.toString());
+        });
 }
 
 function onActionClick(elem){
@@ -31,7 +37,7 @@ function onActionClick(elem){
             url: action_type_map[action_type]
         };
 
-        DoAsyncRequest(req_params, 'action: '+action_type)
+        DoAjaxJsonRequest(req_params, 'action: '+action_type)
     }
     else{
         if(action_type == 'add'){
@@ -49,9 +55,64 @@ $(function(){
             $('form', this).each(function(){
                 // reset form inputs
                 this.reset();
+
+                // remove ajax error
+                $('#ajaxFail > [role=alert]', this).remove();
+
                 // reset all radiobutton
-                $(this).button('reset');
+
+                // this impl crashes React
+                // $(this).button('reset');
             });
         });
     }
 );
+
+function OnAjaxFormSubmit(form){
+    var jform = $(form);
+
+    var form_inputs = jform.serializeObject();
+
+    var tune_inputs_attr = jform.attr('data-tune-inputs-method');
+
+    if(tune_inputs_attr){
+        console.log('data-tune-inputs-method: ' + tune_inputs_attr);
+        window[tune_inputs_attr].call(jform, form_inputs);
+    }
+
+
+    DoAjaxJsonRequest({
+        url: jform.attr('action'),
+        method: jform.attr('method'),
+        data: form_inputs
+    }).fail(function( jqXHR, status, err ) {
+        var alert_box_container = $('#ajaxFail', jform);
+        var alert_box = alert_box_container.find('> .alert');
+
+        if(alert_box.size() == 0){
+            console.log('creating');
+            alert_box=$(
+                '<div class="alert alert-danger fade in" role="alert"> \
+                  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button> \
+                  <h4 class="alert-header"></h4> \
+                  <p class="alert-description"></p> \
+                </div>');
+        }
+
+        alert_box.find('.alert-header').first().html('HTML <span class="html-err">'+ jqXHR.status +'</span>: <span>'+status+'</span>');
+        alert_box.find('.alert-description').first().text(err.toString());
+        alert_box.alert();
+        alert_box_container.html(alert_box);
+        });
+    return false;
+}
+
+/*
+* Onform ajax submit
+* */
+function OnAddPackageTuneInputs(form_inputs){
+    // TODO: consider extract links from REACT component ether from DOM
+    form_inputs.add_links = $('#parsed_links tbody tr td:nth-child(2)', this).map(function () {
+        return $(this).text();
+    }).get();
+}

@@ -1,0 +1,35 @@
+<!-- Modal -->
+<div class="modal fade"
+     tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true"
+
+     {# explicit modal window id #}
+     id="{% block modal_id %}{% endblock %}"
+     >
+    <form class="modal-dialog"
+          role="form" action="{% block action_url %}{% endblock %}"
+          method="{% block action_method %}POST{% endblock %}"
+          enctype='application/json'
+          onsubmit="return OnAjaxFormSubmit(this);"
+          {% block modal_form_attrs %}{% endblock %}>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">{% block modal_title %}{% endblock %}</h4>
+                {% block modal_aftertitle %}{% endblock %}
+            </div>
+            <div class="modal-body">
+                {% block body %}{% endblock %}
+            </div>
+
+            <div id="ajaxFail"></div>
+            <div class="modal-footer">
+                {% block footer %}{% endblock %}
+            </div>
+        </div>
+    </form>
+</div>
+
+{% block after_modal %}{% endblock %}

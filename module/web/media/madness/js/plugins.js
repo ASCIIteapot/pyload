@@ -32,3 +32,21 @@ String.prototype.format = function () {
     return args[n];
   });
 };
+
+/*
+* Record submit-button info for ajax form support and multi submit buttons
+* Rus: Во время перехвата события ''onsubmit'' формы, нет возможности узнать штатными средсвами
+* какая из кнопок ''submit'' была нажата, нижеследющий код выполняет сохранение такой информации
+* в скрытое поле, которое затем может быть извлечено штатными средствами
+* Основано на: http://stackoverflow.com/a/8598058
+* TODO: выяснить влияние на REACT
+* */
+$(document).on('click', 'form [type=submit]', function(){
+    var name   = $(this).attr('name');
+    if (typeof name == 'undefined') return;
+    var value  = $(this).attr('value');
+    var $form  = $(this).parents('form').first();
+    var $input = $('<input type="hidden" class="temp-hidden" />').attr('name', name).attr('value', value);
+    $form.find('input.temp-hidden').remove();
+    $form.append($input);
+});

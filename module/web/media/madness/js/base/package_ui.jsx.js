@@ -13,12 +13,9 @@ var LinksInputElement=React.createClass({
             return false;
         }
 
-        $.ajax({
+        DoAjaxJsonRequest({
             url: this.props.linkParseUrl,
-            method: 'POST',
-            dataType: 'json',
-            data: JSON.stringify({ raw_text: event.target.value }),
-            contentType: "application/json; charset=utf-8",
+            data: { raw_text: event.target.value },
             beforeSend: function( /* jqXHR */ jqXHR, /* PlainObject */ settings ){
                 this.ajaxRequestInProgress=true;
             }.bind(this)
@@ -29,15 +26,23 @@ var LinksInputElement=React.createClass({
         }.bind(this))
           .always(function( data /*|jqXHR*/, textStatus, /*jqXHR|*/ errorThrown ) {
                 this.ajaxRequestInProgress=false;
-            }.bind(this));
+          }.bind(this));
         return false;
     },
     getInitialState: function() {
         return {urls: []};
     },
+    componentDidMount: function(){
+        var target=this.getDOMNode();
+
+        $(target).parents('.modal').on('show.bs.modal', function (e){
+            this.setState(this.getInitialState());
+        }.bind(this));
+    },
     render: function(){
         var taria_el=<textarea key='taria'
                       className="form-control" rows="3"
+                      required="true"
                       onChange={this.handleLinksTextChange}
                       placeholder={this.props.l18n.links}
                       name="add_links" id="add_links"/>;
@@ -62,7 +67,6 @@ var LinksInputElement=React.createClass({
                                 <th>#</th>
                                 <th>link</th>
                                 <th>hoster</th>
-                                <th>status</th>
                             </tr>
                         </thead>
                         <tbody>{items}</tbody>

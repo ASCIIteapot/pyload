@@ -39,18 +39,19 @@
     </div>
 
 
-    <div class="form-group">
-        <label for="add_file">{{_("File")}}</label>
-        <p class="help-block">{{_("Upload a container.")}}</p>
+    <!--Файл пока не умеем-->
+    <!--<div class="form-group">-->
+        <!--<label for="add_file">{{_("File")}}</label>-->
+        <!--<p class="help-block">{{_("Upload a container.")}}</p>-->
 
-        <input type="file" name="add_file" id="add_file"/>
-    </div>
+        <!--<input type="file" name="add_file" id="add_file"/>-->
+    <!--</div>-->
 {% endblock %}
 
 {% block footer %}
     <button type="reset" class="btn btn-default" data-dismiss="modal">{{_("Reset")}}</button>
-    <button type="submit" class="btn btn-default" name="dst" value="collector">{{_("Add Package to collector")}}</button>
-    <button type="submit" class="btn btn-primary" name="dst" value="queue">{{_("Add Package to queue")}}</button>
+    <button type="submit" class="btn btn-default" name="destination" value="collector">{{_("Add Package to collector")}}</button>
+    <button type="submit" class="btn btn-primary" name="destination" value="queue">{{_("Add Package to queue")}}</button>
 {% endblock %}
 
 {% block after_modal %}

@@ -7,11 +7,8 @@ from traceback import print_exc
 from shutil import copyfileobj
 
 from bottle import route, request, HTTPError
-
 from webinterface import PYLOAD
-
 from utils import login_required, render_to_response, toDict
-
 from module.utils import decode, formatSize
 
 
@@ -167,11 +164,11 @@ def parse_urls():
 @route("/json/add_package", method="POST")
 @login_required('ADD')
 def add_package():
-    name = request.forms.get("add_name", "New Package").strip()
-    queue = int(request.forms['add_dest'])
-    links = decode(request.forms['add_links'])
-    links = links.split("\n")
-    pw = request.forms.get("add_password", "").strip("\n\r")
+    name = request.json[u'add_name']
+    queue = 1 if request.json[u'destination'] == 'queue' else 0
+    links = request.json[u'add_links']
+
+    pw = request.json[u'add_password'].strip("\n\r") if u'add_password' in request.json else None
 
     try:
         f = request.files['add_file']
@@ -187,16 +184,12 @@ def add_package():
     except:
         pass
 
-    name = name.decode("utf8", "ignore")
-
-    links = map(lambda x: x.strip(), links)
-    links = filter(lambda x: x != "", links)
-
     pack = PYLOAD.addPackage(name, links, queue)
     if pw:
-        pw = pw.decode("utf8", "ignore")
         data = {"password": pw}
         PYLOAD.setPackageData(pack, data)
+
+    return {"response": "success"}
 
 
 @route("/json/move_package/<dest:int>/<id:int>")

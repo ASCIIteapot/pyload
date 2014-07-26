@@ -100,3 +100,18 @@ ul.controls-group li{
     margin-left: 3px;
     color: #000000;
 }
+
+/*
+   Список элементов, которые разделены внутри промежутками
+*/
+.horisontal-spaced-container{
+    display: flex;
+}
+
+.horisontal-spaced-container > *{
+    margin-right: 5px;
+}
+
+.horisontal-spaced-container > *:last-child{
+    margin-right: 0px;
+}

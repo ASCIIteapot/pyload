@@ -1,0 +1,76 @@
+.pyload-package{
+    min-height: 50px;
+    background: #ffffff;
+    margin-bottom: 15px;
+    font-family: 'PT Sans', sans-serif;
+    font-weight: 400;
+}
+
+.pyload-package > .files{
+    min-height: 50px;
+}
+
+.pyload-package > .header{
+    padding: 5px;
+    font-size: 21pt;
+}
+
+.pyload-package > .files{
+    border-top: solid #000000 1px;
+}
+
+.pyload-package > .header .name{
+    margin-right: 15px;
+}
+
+.pyload-package > .header .name-rel{
+    margin-right: auto;
+}
+
+.pyload-package .package-status{
+    background: #E6E6E6;
+    color: #999999;
+    font-size: 21pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.pyload-package .value{
+    color: #000000;
+}
+
+.pyload-package .delimiter{
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.package-control .btn-group .btn img{
+    max-height: 27px;
+}
+
+/*
+  Restart items
+*/
+
+.package-control .package-restart .restart_errors{
+    background: #E9D2D3;
+}
+
+.package-control .package-restart .restart_errors_and_wait{
+    background: #FFF9A2;
+}
+
+.pyload-package:not(:hover) .aux-info{
+    opacity: 0.2;
+}
+
+.pyload-package .progress-info .progress-quant{
+    display: flex;
+    justify-content: space-between;
+    font-size: 14pt;
+    color: #999999;
+}
+
+.pyload-package .progress-info .progress{
+    margin-bottom: 0px;
+}

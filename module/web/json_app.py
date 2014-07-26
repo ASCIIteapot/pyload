@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
 from os.path import join
 from traceback import print_exc
 from shutil import copyfileobj
@@ -10,6 +9,7 @@ from bottle import route, request, HTTPError
 from webinterface import PYLOAD
 from utils import login_required, render_to_response, toDict
 from module.utils import decode, formatSize
+from module import PyFile
 
 
 def format_time(seconds):
@@ -66,45 +66,27 @@ def links():
 @route("/json/packages")
 @login_required('LIST')
 def packages():
-    print "/json/packages"
     try:
-        data = PYLOAD.getQueue()
+        dict_items = dict(([pkg.pid, toDict(pkg)] for pkg in PYLOAD.getQueue()))
+        for pkg in dict_items.values():
+            pkg['dest'] = 'queue' if pkg['dest'] == 1 else 'collector'
+            del pkg['links']
+        return dict_items
 
-        for package in data:
-            package['links'] = []
-            for file in PYLOAD.get_package_files(package['id']):
-                package['links'].append(PYLOAD.get_file_info(file))
-
-        return data
-
-    except:
+    except Exception as e:
         return HTTPError()
 
 
 @route("/json/package/<id:int>")
 @login_required('LIST')
 def package(id):
+    invert_pyfile_status_map = dict((reversed(kvp) for kvp in PyFile.statusMap.iteritems()))
     try:
         data = toDict(PYLOAD.getPackageData(id))
         data["links"] = [toDict(x) for x in data["links"]]
 
         for pyfile in data["links"]:
-            if pyfile["status"] == 0:
-                pyfile["icon"] = "status_finished.png"
-            elif pyfile["status"] in (2, 3):
-                pyfile["icon"] = "status_queue.png"
-            elif pyfile["status"] in (9, 1):
-                pyfile["icon"] = "status_offline.png"
-            elif pyfile["status"] == 5:
-                pyfile["icon"] = "status_waiting.png"
-            elif pyfile["status"] == 8:
-                pyfile["icon"] = "status_failed.png"
-            elif pyfile["status"] == 4:
-                pyfile["icon"] = "arrow_right.png"
-            elif pyfile["status"] in (11, 13):
-                pyfile["icon"] = "status_proc.png"
-            else:
-                pyfile["icon"] = "status_downloading.png"
+            pyfile['status'] = invert_pyfile_status_map[pyfile['status']]
 
         tmp = data["links"]
         tmp.sort(key=get_sort_key)
@@ -147,7 +129,6 @@ def link_order(ids):
     except:
         return HTTPError()
 
-_url_patter = re.compile(r"((ht|f)tp(s?)://\S+)", re.IGNORECASE)
 @route("/json/parse_urls", method="POST")
 def parse_urls():
     """
@@ -156,9 +137,12 @@ def parse_urls():
     """
 
     raw_text = request.json['raw_text']
-    urls = [url.group(0) for url in _url_patter.finditer(raw_text)]
-    ret_urls = [{'url': purl[0], 'plugin': purl[1]} for purl in PYLOAD.core.pluginManager.parseUrls(urls)]
-    return {'urls': ret_urls}
+
+    parsed_urls = []
+    for plugin, urls in PYLOAD.parseURLs(raw_text).iteritems():
+        for url in urls:
+            parsed_urls.append({'url': url, 'plugin': plugin})
+    return {'urls': parsed_urls}
 
 @route("/json/add_package")
 @route("/json/add_package", method="POST")

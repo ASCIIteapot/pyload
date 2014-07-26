@@ -85,7 +85,13 @@ function OnAjaxFormSubmit(form){
         url: jform.attr('action'),
         method: jform.attr('method'),
         data: form_inputs
-    }).fail(function( jqXHR, status, err ) {
+    })
+        .done(function( data, textStatus, jqXHR){
+            // close form
+            jform.parents('.modal[role=dialog]').modal('hide');
+        })
+        .fail(function( jqXHR, status, err ) {
+            // show inform alert msg
         var alert_box_container = $('#ajaxFail', jform);
         var alert_box = alert_box_container.find('> .alert');
 

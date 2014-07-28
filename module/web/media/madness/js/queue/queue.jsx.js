@@ -142,7 +142,129 @@ var Package = React.createClass({
             });
         }
     },
-    render: function(){
+    get_files_vdom : function(){
+        var state = this.state;
+        var files_elements = state.details.links.map(function(file, index){
+            var links_class={};
+            links_class[file.status] = true;
+
+            var super_status_map = {
+                'super-finished': ["finished"],
+                'super-queue': ['online', 'queued'],
+                'super-offline' : ['offline', 'aborted'],
+                'super-waiting': ['waiting'],
+                'super-failed': ['failed'],
+                'super-skipped': ['skipped'],
+                'super-processing': ['custom', 'processing']
+                // all other
+                // 'super-downloading': ['downloading']
+            };
+
+            // setup super status
+            var super_setted = false;
+            for(super_item in super_status_map){
+                if(super_status_map[super_item].indexOf(file.status)>-1){
+                   links_class[super_item] = true;
+                   super_setted = true;
+                   break;
+                }
+            }
+            if(! super_setted){
+               links_class['super-downloading'] = true;
+            }
+
+            var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
+
+            return (<tr className={cs(links_class)}>
+                       <td>{index}</td>
+                       <td>{file.name}</td>
+                       <td>{file.plugin}</td>
+                       <td>{file.statusmsg}</td>
+                       {file.size ? size : <td></td> }
+                       <td>{file.error}</td>
+                    </tr>);
+        });
+
+        return (<div className='files'>
+                        <table className="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Имя</th>
+                                    <th>Плагин</th>
+                                    <th>Статус</th>
+                                    <th>Размер</th>
+                                    <th>Информация</th>
+                                </tr>
+                            </thead>
+                            <tbody>{files_elements}</tbody>
+                        </table>
+                     </div>);
+    },
+    get_package_base_info_vdom : function(){
+        var links_progress = Math.round((this.state.details.linksdone / this.state.details.linkstotal)*100);
+        return (<div className='base-info'>
+            <div className='name-rel horisontal-spaced-container'>
+                <span className='name'>{this.state.details.name}</span>
+                <div className='package-control btn-toolbar aux-info'>
+                    <div className='btn-group package-primary'>{package_control_items.map(mapControlItem)}</div>
+                    <div className='btn-group package-restart'>{restart_items.map(mapControlItem)}</div>
+                </div>
+            </div>
+
+            <div className="progress-info">
+                <div className='progress-quant'>
+                    <div className='size'>
+                        <span className='done'>
+                            <span className='value'>{toHuman(this.state.details.sizedone).size}</span>
+                                                    {toHuman(this.state.details.sizedone).units}
+                        </span>
+                        <span className='delimiter'>/</span>
+                        <span className='total'>
+                            <span className='value'>{toHuman(this.state.details.sizetotal).size}</span>
+                                                    {toHuman(this.state.details.sizetotal).units}
+                        </span>
+                    </div>
+
+                    <div className='links'>
+                        <span className='links-done value'>{this.state.details.linksdone}</span>
+                        <span className='delimiter'>/</span>
+                        <span className='links-total value'>{this.state.details.linkstotal}</span>
+                    </div>
+                </div>
+                <div className="progress">
+                    <div className="progress-bar" role="progressbar"
+                    aria-valuenow={links_progress}
+                    style={{width: links_progress+'%'}}
+                    aria-valuemin="0" aria-valuemax="100">
+                                                {links_progress+'%'}
+                    </div>
+                </div>
+            </div>
+        </div>);
+    },
+    create_button_vdom : function(action){
+            var state_on = this.state[action];
+            var button_classes = {toggled:state_on };
+            var batton_glyph = {
+                'glyphicon ': true,
+                'glyphicon-chevron-up' : state_on,
+                'glyphicon-chevron-down' : ! state_on
+            };
+            var text = state_on ? 'спрятать' : 'показать';
+            var action_map = {
+                show_details : 'детали',
+                show_files   : 'файлы'
+            };
+            text+= ' ' + action_map[action];
+
+            return (<button  className={cs(button_classes)}
+                            onClick={this.onToggleShowState}
+                            data-action={action}>
+                        <span className={cs(batton_glyph)}></span><span className='description'>{text}</span>
+                    </button>)
+        },
+    render : function(){
         // только для расширенного режима, пока отложим и будем работать с сокращёными данными
 //        // интересны следующий статусы
 //        // downoaded
@@ -157,125 +279,21 @@ var Package = React.createClass({
 //            }
 //        }
 
-        var links_progress = Math.round((this.state.details.linksdone / this.state.details.linkstotal)*100);
-
-        var package_base_info = (<div className='base-info'>
-                                    <div className='name-rel horisontal-spaced-container'>
-                                        <span className='name'>{this.state.details.name}</span>
-                                        <div className='package-control btn-toolbar aux-info'>
-                                            <div className='btn-group package-primary'>{package_control_items.map(mapControlItem)}</div>
-                                            <div className='btn-group package-restart'>{restart_items.map(mapControlItem)}</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="progress-info">
-                                        <div className='progress-quant'>
-                                            <div className='size'>
-                                                <span className='done'>
-                                                    <span className='value'>{toHuman(this.state.details.sizedone).size}</span>
-                                                    {toHuman(this.state.details.sizedone).units}
-                                                </span>
-                                                <span className='delimiter'>/</span>
-                                                <span className='total'>
-                                                    <span className='value'>{toHuman(this.state.details.sizetotal).size}</span>
-                                                    {toHuman(this.state.details.sizetotal).units}
-                                                </span>
-                                            </div>
-
-                                            <div className='links'>
-                                                <span className='links-done value'>{this.state.details.linksdone}</span>
-                                                <span className='delimiter'>/</span>
-                                                <span className='links-total value'>{this.state.details.linkstotal}</span>
-                                            </div>
-                                        </div>
-                                        <div className="progress">
-                                            <div className="progress-bar" role="progressbar"
-                                                aria-valuenow={links_progress}
-                                                style={{width: links_progress+'%'}}
-                                                aria-valuemin="0" aria-valuemax="100">
-                                                {links_progress+'%'}
-                                            </div>
-                                         </div>
-                                    </div>
-                                </div>);
-
-        var get_files = function(){
-            var state = this.state;
-            var files_elements = state.details.links.map(function(file, index){
-                var links_class={};
-                links_class[file.status] = true;
-
-                var super_status_map = {
-                    'super-finished': ["finished"],
-                    'super-queue': ['online', 'queued'],
-                    'super-offline' : ['offline', 'aborted'],
-                    'super-waiting': ['waiting'],
-                    'super-failed': ['failed'],
-                    'super-skipped': ['skipped'],
-                    'super-processing': ['custom', 'processing']
-                    // all other
-                    // 'super-downloading': ['downloading']
-                };
-
-                // setup super status
-                var super_setted = false;
-                for(super_item in super_status_map){
-                    if(super_status_map[super_item].indexOf(file.status)>-1){
-                       links_class[super_item] = true;
-                       super_setted = true;
-                       break;
-                    }
-                }
-                if(! super_setted){
-                   links_class['super-downloading'] = true;
-                }
-
-                var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
-
-                return (<tr className={cs(links_class)}>
-                           <td>{index}</td>
-                           <td>{file.name}</td>
-                           <td>{file.plugin}</td>
-                           <td>{file.statusmsg}</td>
-                           {file.size ? size : <td></td> }
-                           <td>{file.error}</td>
-                        </tr>);
-            });
-
-            return (<div className='files'>
-                            <table className="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Имя</th>
-                                        <th>Плагин</th>
-                                        <th>Статус</th>
-                                        <th>Размер</th>
-                                        <th>Информация</th>
-                                    </tr>
-                                </thead>
-                                <tbody>{files_elements}</tbody>
-                            </table>
-                         </div>);
-        }.bind(this);
-
         var files_exists = this.state.show_files && ('links' in this.state.details);
 
+        var view_control= <div className='package-view-control-outer'>
+                                <div className='package-view-control'>
+                                    {this.create_button_vdom('show_details')}
+                                    {this.create_button_vdom('show_files')}
+                                </div>
+                            </div>;
+
         return (<div className="pyload-package">
-                    <div className='package-view-control-outer'>
-                        <div className='package-view-control'>
-                            <button className={cs({toggled: this.state.show_details})}
-                                    onClick={this.onToggleShowState}
-                                    data-action='show_details'>Показать детали</button>
-                            <button className={cs({toggled: this.state.show_files})}
-                                    onClick={this.onToggleShowState}
-                                    data-action='show_files'>Показать файлы</button>
-                        </div>
-                    </div>
+                    {view_control}
                     <div className="header">
-                        {package_base_info}
+                        {this.get_package_base_info_vdom()}
                     </div>
-                    {files_exists ? get_files() : null}
+                    {files_exists ? this.get_files_vdom() : null}
                 </div>);
     }
 });

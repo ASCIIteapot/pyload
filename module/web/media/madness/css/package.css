@@ -11,7 +11,7 @@
 }
 
 .pyload-package > .header{
-    padding: 5px;
+    padding: 10px;
     font-size: 21pt;
 }
 
@@ -122,4 +122,9 @@
 
 .pyload-package tr.super-queue{
     background: #A381BD;
+}
+
+.pyload-package tr .units{
+    color: #999999;
+    margin-left: 5px;
 }

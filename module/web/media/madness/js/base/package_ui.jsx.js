@@ -42,7 +42,7 @@ var LinksInputElement=React.createClass({
     render: function(){
         var taria_el=<textarea key='taria'
                       className="form-control" rows="3"
-                      required="true"
+                      required
                       onChange={this.handleLinksTextChange}
                       placeholder={this.props.l18n.links}
                       name="add_links" id="add_links"/>;

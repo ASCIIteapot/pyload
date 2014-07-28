@@ -60,7 +60,10 @@ ul.controls-group{
     margin: 0; /* Обнуляем значение отступов */
     padding: 0px; /* Значение полей */
     display: flex;
-    justify-content: space-between;
+}
+
+ul.controls-group li.header{
+    margin-right: auto;
 }
 
 ul.controls-group li{

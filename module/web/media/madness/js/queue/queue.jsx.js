@@ -230,14 +230,14 @@ var Package = React.createClass({
                    links_class['super-downloading'] = true;
                 }
 
-
+                var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
 
                 return (<tr className={cs(links_class)}>
                            <td>{index}</td>
                            <td>{file.name}</td>
                            <td>{file.plugin}</td>
                            <td>{file.statusmsg}</td>
-                           <td>{toHuman(file.size).size}<span>{toHuman(file.size).units}</span></td>
+                           {file.size ? size : <td></td> }
                            <td>{file.error}</td>
                         </tr>);
             });

@@ -141,6 +141,9 @@ var Package = React.createClass({
               }.bind(this)
             });
         }
+        else{
+            this.forceUpdate();
+        }
     },
     get_files_vdom : function(){
         var state = this.state;
@@ -264,6 +267,61 @@ var Package = React.createClass({
                         <span className={cs(batton_glyph)}></span><span className='description'>{text}</span>
                     </button>)
         },
+    get_package_details_vdom: function(){
+        var create_id = function(name){
+            return name + '_' +this.state.details.pid;
+        }.bind(this);
+
+        var labelClass = cs({
+            'control-label': true,
+            'col-sm-3': true
+        });
+
+        return (<div className='package-details form-horizontal'>
+                    <div className="form-group">
+                        <label className={labelClass}>
+                            Id пакета<span className="glyphicon glyphicon-pencil hid"></span>
+                        </label>
+                        <div className='col-sm-9'>
+                            <p className="form-control-static">{this.state.details.pid}</p>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className={labelClass} for={create_id('name')}>
+                            Имя пакета<span className="glyphicon glyphicon-pencil"></span>
+                        </label>
+                        <div className='col-sm-9'>
+                            <input type="text" id={create_id('name')}
+                            className="form-control" placeholder="Имя пакета"
+                                onChange={this.onPackagePropertyChanged}
+                            defaultValue={this.state.details.name}/>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className={labelClass} for={create_id('folder')}>
+                            Папка сохранения<span className="glyphicon glyphicon-pencil"></span>
+                        </label>
+                        <div className='col-sm-9'>
+                            <input type="text" id={create_id('folder')}
+                            className="form-control" placeholder="Папка сохранения"
+                                onChange={this.onPackagePropertyChanged}
+                            defaultValue={this.state.details.folder}/>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className={labelClass} for={create_id('passwords')}>
+                            Пароли<span className="glyphicon glyphicon-pencil"></span>
+                        </label>
+                        <div className='col-sm-9'>
+                            <textarea id={create_id('passwords')} rows='3'
+                                className="form-control" placeholder="Пароли"
+                                onChange={this.onPackagePropertyChanged}
+                                defaultValue={this.state.details.password}></textarea>
+                        </div>
+                    </div>
+                </div>)
+    },
+    onPackagePropertyChanged: function(event){},
     render : function(){
         // только для расширенного режима, пока отложим и будем работать с сокращёными данными
 //        // интересны следующий статусы
@@ -292,6 +350,7 @@ var Package = React.createClass({
                     {view_control}
                     <div className="header">
                         {this.get_package_base_info_vdom()}
+                        {this.state.show_details ? this.get_package_details_vdom() : null}
                     </div>
                     {files_exists ? this.get_files_vdom() : null}
                 </div>);

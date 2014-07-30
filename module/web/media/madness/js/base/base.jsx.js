@@ -118,6 +118,7 @@ var ServerStatusControl = React.createClass({
         $.ajax({
           url: this.props.url,
           dataType: 'json',
+          timeout: this.props.pollInterval,
           success: function(data) {
             this.setState(data);
           }.bind(this),

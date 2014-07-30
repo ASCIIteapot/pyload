@@ -13,6 +13,8 @@
 .pyload-package > .header{
     padding: 10px;
     font-size: 21pt;
+    display: flex;
+    flex-direction: column;
 }
 
 .pyload-package > .files{
@@ -126,4 +128,69 @@
 .pyload-package tr .units{
     color: #999999;
     margin-left: 5px;
+}
+
+/*
+   package details
+*/
+.pyload-package .package-details{
+    font-size: 14pt;
+    width: 100%;
+}
+
+
+.pyload-package .package-details .form-group{
+    margin-bottom: 2px; /* устраняем слишком большие интервалы между рядами, но оставляем зазор для тени */
+}
+
+.pyload-package .package-details .form-group .form-control{
+    border: solid transparent;
+    border-width: 1px 1px 1px 3px;
+    box-shadow: none;
+    /*padding-left: 0;*/
+    border-radius: 0;
+}
+
+/* для статичных полей делаем отступ на величену margin- padding- form-control */
+.pyload-package .package-details .form-group .form-control-static{
+    margin-left: 15px;
+}
+
+/* Выделяем элементы ввода когда указатель мыши находится над формой ввода деталей */
+.pyload-package .package-details:hover .form-group .form-control{
+    border-left-color: cornflowerblue;
+    /*padding-left: 10px;*/
+}
+
+/* выделяем визуально элемент ввода который захватил фокус упралвения */
+.pyload-package .package-details .form-group .form-control:hover{
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.375) inset;
+}
+
+/* выделяем визуально элемент ввода который захватил фокус упралвения */
+.pyload-package .package-details .form-group .form-control:focus{
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(102, 175, 233, 0.6);
+}
+
+.pyload-package .package-details .form-group .control-label{
+    text-transform: uppercase;
+    font-family: 'PT Sans', sans-serif;
+    font-weight: 400;
+    color: #999999;
+}
+
+/* скрываем иконку редактирования для айдишника пакета но так чтобы из потока она не исчезла */
+.pyload-package .package-details .form-group .control-label > span.glyphicon.hid{
+    visibility: hidden;
+}
+
+.pyload-package .package-details .form-group .control-label > span.glyphicon{
+    margin-left: 10px;
+    opacity: 0.3;
+}
+
+/* при наведении на строку ввода подсвечиваем иконку */
+.pyload-package .package-details .form-group:hover .control-label > span.glyphicon{
+    opacity: 1;
+    color: #000000;
 }

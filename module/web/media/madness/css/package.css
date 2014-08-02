@@ -102,8 +102,9 @@
     background: #2E7BB3;
 }
 
+/* Показ кнопок отображения файлов и деталей пакета по наведению указателя мыши на пакет */
 .pyload-package:not(:hover) .package-view-control-outer{
-    display: none;
+    /*display: none;*/
 }
 
 /*
@@ -180,17 +181,32 @@
 }
 
 /* скрываем иконку редактирования для айдишника пакета но так чтобы из потока она не исчезла */
-.pyload-package .package-details .form-group .control-label > span.glyphicon.hid{
+.pyload-package .package-details .form-group .control-label span.glyphicon.hid{
     visibility: hidden;
 }
 
-.pyload-package .package-details .form-group .control-label > span.glyphicon{
-    margin-left: 10px;
+.pyload-package .package-details .form-group .control-label .edit-marker{
     opacity: 0.3;
 }
 
 /* при наведении на строку ввода подсвечиваем иконку */
-.pyload-package .package-details .form-group:hover .control-label > span.glyphicon{
+.pyload-package .package-details .form-group:hover .control-label .edit-marker{
     opacity: 1;
     color: #000000;
+}
+
+.pyload-package .package-details .form-group .control-label .horisontal-spaced-container{
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.form-footer {
+    padding: 15px;
+    text-align: right;
+    border-top: 1px solid #E5E5E5;
+}
+
+.form-footer .btn + .btn {
+    margin-bottom: 0px;
+    margin-left: 5px;
 }

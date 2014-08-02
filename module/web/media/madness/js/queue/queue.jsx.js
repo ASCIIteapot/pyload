@@ -79,13 +79,14 @@ function toHuman(size_in_bytes){
     });
 }
 
-
 var Package = React.createClass({
 
     getInitialState: function() {
         return {
             show_details: false,
             show_files: false,
+            folder_follow_name: true,
+            show_package_save: false,
             details: this.props.init_state
         };
     },
@@ -142,6 +143,8 @@ var Package = React.createClass({
             });
         }
         else{
+            this.state.show_package_save = false;
+            this.state.folder_follow_name = true;
             this.forceUpdate();
         }
     },
@@ -267,61 +270,154 @@ var Package = React.createClass({
                         <span className={cs(batton_glyph)}></span><span className='description'>{text}</span>
                     </button>)
         },
-    get_package_details_vdom: function(){
-        var create_id = function(name){
+    create_id: function(name){
             return name + '_' +this.state.details.pid;
-        }.bind(this);
+    },
+    get_package_details_vdom: function(){
 
         var labelClass = cs({
             'control-label': true,
             'col-sm-3': true
         });
 
-        return (<div className='package-details form-horizontal'>
+        var folderButtonClass = cs({
+            'btn': true,
+            'btn-default': true,
+            'active': this.state.folder_follow_name
+        });
+
+        var resetFunc=function(){
+            this.resetPackageDetailForm();
+            this.state.show_package_save = false;
+            this.forceUpdate();
+        }.bind(this);
+
+        var footer=<div className='form-footer'>
+                        <button className='btn btn-default' onClick={resetFunc}>Отмена</button>
+                        <button className='btn btn-primary'>Сохранить</button>
+                    </div>;
+
+        return (<form className='package-details form-horizontal'>
                     <div className="form-group">
                         <label className={labelClass}>
-                            Id пакета<span className="glyphicon glyphicon-pencil hid"></span>
+                            <div className='horisontal-spaced-container'>
+                                <span>Id пакета</span>
+                                <span className="glyphicon glyphicon-pencil hid"></span>
+                            </div>
                         </label>
                         <div className='col-sm-9'>
                             <p className="form-control-static">{this.state.details.pid}</p>
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className={labelClass} for={create_id('name')}>
-                            Имя пакета<span className="glyphicon glyphicon-pencil"></span>
+                        <label className={labelClass} for={this.create_id('name')}>
+                            <div className='horisontal-spaced-container'>
+                                <span>Имя пакета</span>
+                                <span className="glyphicon glyphicon-pencil edit-marker"></span>
+                            </div>
                         </label>
                         <div className='col-sm-9'>
-                            <input type="text" id={create_id('name')}
-                            className="form-control" placeholder="Имя пакета"
-                                onChange={this.onPackagePropertyChanged}
-                            defaultValue={this.state.details.name}/>
+                            <input type="text" id={this.create_id('name')}
+                                   ref='pname'
+                                   className="form-control" placeholder="Имя пакета"
+                                   onChange={this.onPackagePropertyChanged}
+                                   defaultValue={this.state.details.name}/>
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className={labelClass} for={create_id('folder')}>
-                            Папка сохранения<span className="glyphicon glyphicon-pencil"></span>
+                        <label className={labelClass} for={this.create_id('folder')}>
+                            <div className='horisontal-spaced-container'>
+                                <span>Папка сохранения</span>
+                                <button type="button" className={folderButtonClass} data-toggle="button"
+                                        ref='folder_link_button'
+                                        onClick={this.onPackagePropertyChanged}
+                                        data-toggle="tooltip" data-placement="top"
+                                        title="Имя папки сохранения связано с именем пакета">
+                                    <span className="glyphicon glyphicon-link"></span>
+                                </button>
+                                <span className="glyphicon glyphicon-pencil edit-marker"></span>
+                            </div>
                         </label>
                         <div className='col-sm-9'>
-                            <input type="text" id={create_id('folder')}
-                            className="form-control" placeholder="Папка сохранения"
-                                onChange={this.onPackagePropertyChanged}
-                            defaultValue={this.state.details.folder}/>
+                            <input type="text" id={this.create_id('folder')}
+                                    ref='pfolder'
+                                className="form-control" placeholder="Папка сохранения"
+                                    onChange={this.onPackagePropertyChanged}
+                                defaultValue={this.state.details.folder}/>
                         </div>
                     </div>
                     <div className="form-group">
-                        <label className={labelClass} for={create_id('passwords')}>
-                            Пароли<span className="glyphicon glyphicon-pencil"></span>
+                        <label className={labelClass} for={this.create_id('passwords')}>
+                            <div className='horisontal-spaced-container'>
+                                <span>Пароли</span>
+                                <span className="glyphicon glyphicon-pencil edit-marker"></span>
+                            </div>
+
                         </label>
                         <div className='col-sm-9'>
-                            <textarea id={create_id('passwords')} rows='3'
+                            <textarea id={this.create_id('passwords')} rows='3'
+                                ref='ppass'
                                 className="form-control" placeholder="Пароли"
                                 onChange={this.onPackagePropertyChanged}
-                                defaultValue={this.state.details.password}></textarea>
+                                defaultValue={this.state.details.password}/>
                         </div>
                     </div>
-                </div>)
+                    { this.state.show_package_save ? footer: null}
+                </form>)
     },
-    onPackagePropertyChanged: function(event){},
+    // метод сбрасывает значения полей формы деталей пакета на умолчательные, соотвествующие таковым в объекте состояния
+    resetPackageDetailForm: function(){
+        function resetInput(input){
+            input.setState(input.getInitialState());
+        }
+
+        var inputNames = ['pname', 'pfolder', 'ppass'];
+
+        inputNames.map(function(item, index){
+            return this.refs[item];
+        }.bind(this)).forEach(resetInput);
+
+        this.state.folder_follow_name = true;
+    },
+    onPackagePropertyChanged: function(event){
+        var nameNode = this.refs['pname'].getDOMNode();
+        var folderNode = this.refs['pfolder'].getDOMNode();
+        var folderLinkButton = this.refs['folder_link_button'].getDOMNode();
+        var process = true;
+        if(event.target.id == this.create_id('folder')){
+            // имя папки изменилось, необходимо сбросить переключатель следования имени пакета
+            var folder = folderNode.value;
+            var name = nameNode.value;
+
+            if(this.state.folder_follow_name){
+                this.state.folder_follow_name = folder == name;
+            }
+
+            this.forceUpdate();
+        }
+        else if(event.target.id == this.create_id('name')){
+            if(this.state.folder_follow_name){
+                var name = nameNode.value;
+                this.refs['pfolder'].setState({'value': name});
+            }
+        }
+        else if(event.target == folderLinkButton){
+            process = folderNode.value != nameNode.value;
+            this.state.folder_follow_name = !this.state.folder_follow_name;
+            if(this.state.folder_follow_name){
+                this.refs['pfolder'].setState({'value': nameNode.value});
+            }
+            this.forceUpdate();
+        }
+        if(process){
+            this.processPackageDataChange();
+        }
+    },
+    processPackageDataChange: function(){
+        console.log('process');
+        this.state.show_package_save = true;
+        this.forceUpdate();
+    },
     render : function(){
         // только для расширенного режима, пока отложим и будем работать с сокращёными данными
 //        // интересны следующий статусы

@@ -2,6 +2,16 @@
  * Created by Developer on 21.07.14.
  */
 
+function ShowNotify(description, params){
+    var invoke_params = {
+        ele: '#body-container',
+        offset: {from: 'top', amount: 60}
+    };
+    $.extend(invoke_params, params);
+
+    $.bootstrapGrowl(description, invoke_params);
+}
+
 function DoAjaxJsonRequest(ajaxArguments, callDescription = null){
     var ajax_params = {
             method: 'POST',
@@ -16,9 +26,11 @@ function DoAjaxJsonRequest(ajaxArguments, callDescription = null){
     return $.ajax(ajax_params)
         .done(function( data, textStatus, jqXHR ) {
             console.log('Ajax ssly complited for ', callDescription, '; ', this.url);
+            ShowNotify(callDescription, {type: 'success'});
         })
         .fail(function( jqXHR, status, err ) {
             console.error('Ajax filed for ', callDescription, '; ', this.url, status, err.toString());
+            ShowNotify(callDescription, {type: 'error'});
         });
 }
 

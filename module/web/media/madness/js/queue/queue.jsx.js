@@ -107,7 +107,7 @@ var Package = React.createClass({
     },
     fetch_info: function(show_target){
 
-        function computeLinks(links, func=null){
+        function computeLinks(links, func){
             var size=0;
             var count=0;
             for(index in links){
@@ -359,7 +359,7 @@ var Package = React.createClass({
                                 ref='ppass'
                                 className="form-control" placeholder="Пароли"
                                 onChange={this.onPackagePropertyChanged}
-                                defaultValue={this.state.details.password}/>
+                                defaultValue={this.state.details.password}></textarea>
                         </div>
                     </div>
                     { this.state.show_package_save ? footer: null}
@@ -376,6 +376,9 @@ var Package = React.createClass({
         inputNames.map(function(item, index){
             return this.refs[item];
         }.bind(this)).forEach(resetInput);
+
+        // HACK: <textarea/> не обнуляется через setState()
+        this.refs['ppass'].getDOMNode().value = this.refs['ppass'].getInitialState().initialValue ;
 
         this.state.folder_follow_name = true;
     },

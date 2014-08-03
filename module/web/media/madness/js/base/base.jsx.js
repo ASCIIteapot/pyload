@@ -51,7 +51,7 @@ var DropdownMenuItem = React.createClass({
   }
 });
 
-function createSingleMenuItem(item, additionalClases = null){
+function createSingleMenuItem(item, additionalClases){
     if ('items' in item){
         // is dropdown
         return (<DropdownMenuItem

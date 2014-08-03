@@ -12,7 +12,7 @@ function ShowNotify(description, params){
     $.bootstrapGrowl(description, invoke_params);
 }
 
-function DoAjaxJsonRequest(ajaxArguments, callDescription = null){
+function DoAjaxJsonRequest(ajaxArguments, callDescription){
     var ajax_params = {
             method: 'POST',
             dataType: 'json',

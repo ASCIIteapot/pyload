@@ -293,11 +293,18 @@ var Package = React.createClass({
         }.bind(this);
 
         var footer=<div className='form-footer'>
-                        <button className='btn btn-default' onClick={resetFunc}>Отмена</button>
-                        <button className='btn btn-primary'>Сохранить</button>
+                        <button
+                            type="reset"
+                            className='btn btn-default'
+                            onClick={resetFunc}>Отмена</button>
+                        <button className='btn btn-primary'
+                            type="submit">Сохранить</button>
                     </div>;
 
-        return (<form className='package-details form-horizontal'>
+        return (<form className='package-details form-horizontal'
+                    onSubmit={this.commitPackageChanges}
+                    role="form"
+                    ref='details-form'>
                     <div className="form-group">
                         <label className={labelClass}>
                             <div className='horisontal-spaced-container'>
@@ -319,6 +326,7 @@ var Package = React.createClass({
                         <div className='col-sm-9'>
                             <input type="text" id={this.create_id('name')}
                                    ref='pname'
+                                   name='pack_name'
                                    className="form-control" placeholder="Имя пакета"
                                    onChange={this.onPackagePropertyChanged}
                                    defaultValue={this.state.details.name}/>
@@ -340,7 +348,7 @@ var Package = React.createClass({
                         </label>
                         <div className='col-sm-9'>
                             <input type="text" id={this.create_id('folder')}
-                                    ref='pfolder'
+                                    ref='pfolder' name='pack_folder'
                                 className="form-control" placeholder="Папка сохранения"
                                     onChange={this.onPackagePropertyChanged}
                                 defaultValue={this.state.details.folder}/>
@@ -356,7 +364,7 @@ var Package = React.createClass({
                         </label>
                         <div className='col-sm-9'>
                             <textarea id={this.create_id('passwords')} rows='3'
-                                ref='ppass'
+                                ref='ppass' name='pack_pws'
                                 className="form-control" placeholder="Пароли"
                                 onChange={this.onPackagePropertyChanged}
                                 defaultValue={this.state.details.password}></textarea>
@@ -364,6 +372,19 @@ var Package = React.createClass({
                     </div>
                     { this.state.show_package_save ? footer: null}
                 </form>)
+    },
+    commitPackageChanges: function(){
+        var packageData = $(this.refs['details-form'].getDOMNode()).serializeObject();
+        packageData['pack_id'] = this.props.pid;
+        DoAjaxJsonRequest({
+            url: '/json/edit_package',
+            data: packageData
+        }, 'edit package '+this.props.pid).done(function(){
+            this.resetPackageDetailForm();
+            this.state.show_package_save = false;
+            this.forceUpdate();
+            }.bind(this));
+        return false;
     },
     // метод сбрасывает значения полей формы деталей пакета на умолчательные, соотвествующие таковым в объекте состояния
     resetPackageDetailForm: function(){

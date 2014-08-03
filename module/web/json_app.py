@@ -129,6 +129,7 @@ def link_order(ids):
     except:
         return HTTPError()
 
+
 @route("/json/parse_urls", method="POST")
 def parse_urls():
     """
@@ -143,6 +144,7 @@ def parse_urls():
         for url in urls:
             parsed_urls.append({'url': url, 'plugin': plugin})
     return {'urls': parsed_urls}
+
 
 @route("/json/add_package")
 @route("/json/add_package", method="POST")
@@ -190,10 +192,12 @@ def move_package(dest, id):
 @login_required('MODIFY')
 def edit_package():
     try:
-        id = int(request.forms.get("pack_id"))
-        data = {"name": request.forms.get("pack_name").decode("utf8", "ignore"),
-                "folder": request.forms.get("pack_folder").decode("utf8", "ignore"),
-                 "password": request.forms.get("pack_pws").decode("utf8", "ignore")}
+        id = int(request.json[u"pack_id"])
+        data = {
+            "name": request.json[u"pack_name"],
+            "folder": request.json[u"pack_folder"],
+            "password": request.json[u"pack_pws"]
+        }
 
         PYLOAD.setPackageData(id, data)
         return {"response": "success"}
@@ -217,7 +221,7 @@ def set_captcha():
     if task.tid >= 0:
         src = "data:image/%s;base64,%s" % (task.type, task.data)
 
-        return {'captcha': True, 'id': task.tid, 'src': src, 'result_type' : task.resultType}
+        return {'captcha': True, 'id': task.tid, 'src': src, 'result_type': task.resultType}
     else:
         return {'captcha': False}
 
@@ -232,7 +236,7 @@ def load_config(category, section):
         conf = PYLOAD.getPluginConfigDict()
 
     for key, option in conf[section].iteritems():
-        if key in ("desc","outline"): continue
+        if key in ("desc", "outline"): continue
 
         if ";" in option["type"]:
             option["list"] = option["type"].split(";")
@@ -269,12 +273,12 @@ def add_account():
 @route("/json/update_accounts", method="POST")
 @login_required("ACCOUNTS")
 def update_accounts():
-    deleted = [] #dont update deleted accs or they will be created again
+    deleted = []  #dont update deleted accs or they will be created again
 
     for name, value in request.POST.iteritems():
         value = value.strip()
         if not value: continue
-        
+
         tmp, user = name.split(";")
         plugin, action = tmp.split("|")
 
@@ -287,12 +291,12 @@ def update_accounts():
         elif action == "limitdl" and value.isdigit():
             PYLOAD.updateAccount(plugin, user, options={"limitDL": [value]})
         elif action == "delete":
-            deleted.append((plugin,user))
+            deleted.append((plugin, user))
             PYLOAD.removeAccount(plugin, user)
+
 
 @route("/json/change_password", method="POST")
 def change_password():
-
     user = request.POST["user_login"]
     oldpw = request.POST["login_current_password"]
     newpw = request.POST["login_new_password"]

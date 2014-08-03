@@ -30,7 +30,7 @@ function DoAjaxJsonRequest(ajaxArguments, callDescription){
         })
         .fail(function( jqXHR, status, err ) {
             console.error('Ajax filed for ', callDescription, '; ', this.url, status, err.toString());
-            ShowNotify(callDescription, {type: 'error'});
+            ShowNotify(callDescription, {type: 'danger'});
         });
 }
 

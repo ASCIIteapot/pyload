@@ -87,70 +87,42 @@ var Package = React.createClass({
             show_files: false,
             folder_follow_name: true,
             show_package_save: false,
-            details: this.props.init_state
+            details: this.props.get_state
         };
     },
     onToggleShowState: function(event){
         var button = $(event.target);
-        var showToggle = button.attr('data-action')
-        console.log(showToggle, this.props.pid);
+        var showToggle = button.attr('data-action');
         // изменяем статус отображения
         this.state[showToggle] = ! this.state[showToggle];
-
+        console.log(showToggle, this.props.pid, this.state[showToggle]);
         // обробатываем изменеения
-        if(this.state[showToggle]){
-            this.fetch_info(showToggle);
+        if(showToggle == 'show_files'){
+            // Если это файлы, то сооьщаем супервизору о том что нужна ли информация о пакетах
+            this.props.lookupFiles(this.state[showToggle]);
         }
-        else{
-            this.forceUpdate();
-        }
-    },
-    fetch_info: function(show_target){
-
-        function computeLinks(links, func){
-            var size=0;
-            var count=0;
-            for(index in links){
-               var item=links[index];
-               if(func==null || func(item.status)){
-                   size+=item.size;
-                   count++;
-               }
-            }
-            return {size: size, count: count};
-        }
-
-
-        if(show_target == 'show_files'){
-            $.ajax({
-              url: '/json/package/'+this.props.pid,
-              dataType: 'json',
-              success: function(data) {
-                  var done = computeLinks(data.links, function(status){return status == 'finished'});
-                  data.linksdone = done.count;
-                  data.sizedone = done.size;
-
-                  var total = computeLinks(data.links);
-                  data.linkstotal = total.count;
-                  data.sizetotal = total.size;
-
-                  this.state.details = data;
-                  this.forceUpdate();
-              }.bind(this),
-              error: function(xhr, status, err) {
-                console.error('/json/package/'+this.props.pid, status, err.toString());
-              }.bind(this)
-            });
-        }
-        else{
+        else if(showToggle == 'show_details' && this.state[showToggle]){
+            // если показываются детали, то создаём поля данных для форм деталей
             this.state.show_package_save = false;
-            this.state.folder_follow_name = true;
-            this.forceUpdate();
+            this.create_details_form_data();
         }
+
+        this.forceUpdate();
+    },
+    /**
+     * Vrthod creates and setup form data for editing */
+    create_details_form_data: function(){
+        var details = this.state.details();
+        this.state.package_form_details={
+                name: details.name,
+                folder: details.folder,
+                password: details.password,
+                folder_follow_name: details.folder == details.name
+            };
     },
     get_files_vdom : function(){
         var state = this.state;
-        var files_elements = state.details.links.map(function(file, index){
+        var files_elements = state.details().links.map(function(file, index){
             var links_class={};
             links_class[file.status] = true;
 
@@ -208,10 +180,10 @@ var Package = React.createClass({
                      </div>);
     },
     get_package_base_info_vdom : function(){
-        var links_progress = Math.round((this.state.details.linksdone / this.state.details.linkstotal)*100);
+        var links_progress = Math.round((this.state.details().linksdone / this.state.details().linkstotal)*100);
         return (<div className='base-info'>
             <div className='name-rel horisontal-spaced-container'>
-                <span className='name'>{this.state.details.name}</span>
+                <span className='name'>{this.state.details().name}</span>
                 <div className='package-control btn-toolbar aux-info'>
                     <div className='btn-group package-primary'>{package_control_items.map(mapControlItem)}</div>
                     <div className='btn-group package-restart'>{restart_items.map(mapControlItem)}</div>
@@ -222,20 +194,20 @@ var Package = React.createClass({
                 <div className='progress-quant'>
                     <div className='size'>
                         <span className='done'>
-                            <span className='value'>{toHuman(this.state.details.sizedone).size}</span>
-                                                    {toHuman(this.state.details.sizedone).units}
+                            <span className='value'>{toHuman(this.state.details().sizedone).size}</span>
+                                                    {toHuman(this.state.details().sizedone).units}
                         </span>
                         <span className='delimiter'>/</span>
                         <span className='total'>
-                            <span className='value'>{toHuman(this.state.details.sizetotal).size}</span>
-                                                    {toHuman(this.state.details.sizetotal).units}
+                            <span className='value'>{toHuman(this.state.details().sizetotal).size}</span>
+                                                    {toHuman(this.state.details().sizetotal).units}
                         </span>
                     </div>
 
                     <div className='links'>
-                        <span className='links-done value'>{this.state.details.linksdone}</span>
+                        <span className='links-done value'>{this.state.details().linksdone}</span>
                         <span className='delimiter'>/</span>
-                        <span className='links-total value'>{this.state.details.linkstotal}</span>
+                        <span className='links-total value'>{this.state.details().linkstotal}</span>
                     </div>
                 </div>
                 <div className="progress">
@@ -271,9 +243,13 @@ var Package = React.createClass({
                     </button>)
         },
     create_id: function(name){
-            return name + '_' +this.state.details.pid;
+            return name + '_' +this.props.pid;
     },
     get_package_details_vdom: function(){
+
+        if(! this.state.show_package_save){
+            this.create_details_form_data();
+        }
 
         var labelClass = cs({
             'control-label': true,
@@ -283,7 +259,7 @@ var Package = React.createClass({
         var folderButtonClass = cs({
             'btn': true,
             'btn-default': true,
-            'active': this.state.folder_follow_name
+            'active': this.state.package_form_details.folder_follow_name
         });
 
         var resetFunc=function(){
@@ -313,7 +289,7 @@ var Package = React.createClass({
                             </div>
                         </label>
                         <div className='col-sm-9'>
-                            <p className="form-control-static">{this.state.details.pid}</p>
+                            <p className="form-control-static">{this.props.pid}</p>
                         </div>
                     </div>
                     <div className="form-group">
@@ -329,7 +305,7 @@ var Package = React.createClass({
                                    name='pack_name'
                                    className="form-control" placeholder="Имя пакета"
                                    onChange={this.onPackagePropertyChanged}
-                                   defaultValue={this.state.details.name}/>
+                                   value={this.state.package_form_details.name}/>
                         </div>
                     </div>
                     <div className="form-group">
@@ -338,6 +314,7 @@ var Package = React.createClass({
                                 <span>Папка сохранения</span>
                                 <button type="button" className={folderButtonClass} data-toggle="button"
                                         ref='folder_link_button'
+                                        id={this.create_id('follownamebutton')}
                                         onClick={this.onPackagePropertyChanged}
                                         data-toggle="tooltip" data-placement="top"
                                         title="Имя папки сохранения связано с именем пакета">
@@ -351,7 +328,7 @@ var Package = React.createClass({
                                     ref='pfolder' name='pack_folder'
                                 className="form-control" placeholder="Папка сохранения"
                                     onChange={this.onPackagePropertyChanged}
-                                defaultValue={this.state.details.folder}/>
+                                value={this.state.package_form_details.folder}/>
                         </div>
                     </div>
                     <div className="form-group">
@@ -367,80 +344,71 @@ var Package = React.createClass({
                                 ref='ppass' name='pack_pws'
                                 className="form-control" placeholder="Пароли"
                                 onChange={this.onPackagePropertyChanged}
-                                defaultValue={this.state.details.password}></textarea>
+                                value={this.state.package_form_details.password}></textarea>
                         </div>
                     </div>
                     { this.state.show_package_save ? footer: null}
                 </form>)
     },
     commitPackageChanges: function(){
-        var packageData = $(this.refs['details-form'].getDOMNode()).serializeObject();
-        packageData['pack_id'] = this.props.pid;
+        var packageData = {
+            pack_id: this.props.pid,
+            pack_name: this.state.package_form_details.name,
+            pack_folder: this.state.package_form_details.folder,
+            pack_pws: this.state.package_form_details.password
+        };
+
         DoAjaxJsonRequest({
             url: '/json/edit_package',
             data: packageData
         }, 'edit package '+this.props.pid).done(function(){
             this.resetPackageDetailForm();
-            this.state.show_package_save = false;
-            this.forceUpdate();
+            //this.forceUpdate();
             }.bind(this));
         return false;
     },
     // метод сбрасывает значения полей формы деталей пакета на умолчательные, соотвествующие таковым в объекте состояния
     resetPackageDetailForm: function(){
-        function resetInput(input){
-            input.setState(input.getInitialState());
-        }
-
-        var inputNames = ['pname', 'pfolder', 'ppass'];
-
-        inputNames.map(function(item, index){
-            return this.refs[item];
-        }.bind(this)).forEach(resetInput);
-
-        // HACK: <textarea/> не обнуляется через setState()
-        this.refs['ppass'].getDOMNode().value = this.refs['ppass'].getInitialState().initialValue ;
-
-        this.state.folder_follow_name = true;
+        this.create_details_form_data();
+        this.state.show_package_save = false;
     },
     onPackagePropertyChanged: function(event){
-        var nameNode = this.refs['pname'].getDOMNode();
-        var folderNode = this.refs['pfolder'].getDOMNode();
-        var folderLinkButton = this.refs['folder_link_button'].getDOMNode();
+        var detials_form = this.state.package_form_details;
         var process = true;
         if(event.target.id == this.create_id('folder')){
             // имя папки изменилось, необходимо сбросить переключатель следования имени пакета
-            var folder = folderNode.value;
-            var name = nameNode.value;
-
-            if(this.state.folder_follow_name){
-                this.state.folder_follow_name = folder == name;
+            detials_form.folder = event.target.value;
+            if(detials_form.folder_follow_name){
+                detials_form.folder_follow_name = detials_form.folder == detials_form.name;
             }
 
             this.forceUpdate();
         }
         else if(event.target.id == this.create_id('name')){
-            if(this.state.folder_follow_name){
-                var name = nameNode.value;
-                this.refs['pfolder'].setState({'value': name});
+            detials_form.name = event.target.value;
+            if(detials_form.folder_follow_name){
+                detials_form.folder = detials_form.name;
             }
         }
-        else if(event.target == folderLinkButton){
-            process = folderNode.value != nameNode.value;
-            this.state.folder_follow_name = !this.state.folder_follow_name;
-            if(this.state.folder_follow_name){
-                this.refs['pfolder'].setState({'value': nameNode.value});
+        else if(event.target.id == this.create_id('follownamebutton')){
+            detials_form.folder_follow_name = ! detials_form.folder_follow_name;
+            if(detials_form.folder_follow_name){
+                process = detials_form.folder != detials_form.name;
+                detials_form.folder = detials_form.name;
             }
-            this.forceUpdate();
         }
+        else if(event.target.id == this.create_id('passwords')){
+            detials_form.password = event.target.value;
+        }
+
         if(process){
             this.processPackageDataChange();
         }
+        this.forceUpdate();
     },
     processPackageDataChange: function(){
         console.log('process');
         this.state.show_package_save = true;
-        this.forceUpdate();
     },
     render : function(){
         // только для расширенного режима, пока отложим и будем работать с сокращёными данными
@@ -457,7 +425,7 @@ var Package = React.createClass({
 //            }
 //        }
 
-        var files_exists = this.state.show_files && ('links' in this.state.details);
+        var files_exists = this.state.show_files && ('links' in this.state.details());
 
         var view_control= <div className='package-view-control-outer'>
                                 <div className='package-view-control'>
@@ -490,19 +458,85 @@ var PackageQueue = React.createClass({
           url: '/json/packages',
           dataType: 'json',
           success: function(data) {
-            this.setState(data);
+              for(pid in this.state){
+                  if(pid in data)
+                  {
+                    data[pid]['links']=this.state[pid]['links'];
+                  }
+              }
+              this.setState(data);
           }.bind(this),
           error: function(xhr, status, err) {
             console.error(this.props.url, status, err.toString());
           }.bind(this)
         });
     },
+    getPackageState: function(pid){
+        // получение информации для указнного пакета
+        return this.state[pid];
+    },
+
+    /**
+     * @pid: package id
+     * @enable: enables lookup for files change. If enabled then files info fetched from server via /json/package/<id> and call forceUpdate when necessary/
+     * */
+    lookupFiles: function(pid, /*bool*/ enable){
+        var package = this.state[pid];
+        if(enable){
+            function computeLinks(links, func){
+                var size=0;
+                var count=0;
+                for(index in links){
+                   var item=links[index];
+                   if(func==null || func(item.status)){
+                       size+=item.size;
+                       count++;
+                   }
+                }
+                return {size: size, count: count};
+            }
+            $.ajax({
+              url: '/json/package/'+pid,
+              dataType: 'json',
+              success: function(data) {
+                  var done = computeLinks(data.links, function(status){return status == 'finished'});
+                  data.linksdone = done.count;
+                  data.sizedone = done.size;
+
+                  var total = computeLinks(data.links);
+                  data.linkstotal = total.count;
+                  data.sizetotal = total.size;
+
+                  this.state[pid]=data;
+                  this.refs['p_'+pid].forceUpdate();
+              }.bind(this),
+              error: function(xhr, status, err) {
+                console.error('/json/package/'+this.props.pid, status, err.toString());
+              }.bind(this)
+            });
+        }
+        else{
+            package.files=[];
+        }
+    },
     render: function(){
         var l18n = this.props.l18n;
         var state = this.state;
-        var packages = Object.keys(state).map(function(value, index) {
-                           return (<Package pid={state[value].pid} l18n={l18n} init_state={state[value]} />);
-                        });
+        var packages = Object.keys(state).map(function(pid, index) {
+                           var get_state_func=function(){
+                               return this.getPackageState(pid)
+                           }.bind(this);
+                           var lookup_files=function(enable){
+                               return this.lookupFiles(pid, enable);
+                           }.bind(this);
+
+                           return (<Package ref={'p_'+pid}
+                                            pid={pid}
+                                            l18n={l18n}
+                                            get_state={get_state_func}
+                                            lookupFiles={lookup_files}
+                                            />);
+        }.bind(this));
 
         return (<div className="pyload-package-collection">
                     {packages}

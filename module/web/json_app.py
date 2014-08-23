@@ -12,6 +12,8 @@ from module.utils import decode, formatSize
 from module import PyFile
 
 
+_invert_pyfile_status_map = dict((reversed(kvp) for kvp in PyFile.statusMap.iteritems()))
+
 def format_time(seconds):
     seconds = int(seconds)
 
@@ -56,6 +58,8 @@ def links():
             else:
                 link['info'] = ""
 
+            link['status'] = _invert_pyfile_status_map[link['status']]
+
         data = {'links': links, 'ids': ids}
         return data
     except Exception, e:
@@ -63,14 +67,28 @@ def links():
         return HTTPError()
 
 
+@route("/json/packages", method="POST")  # FULL info for specifed packages
 @route("/json/packages")
 @login_required('LIST')
 def packages():
     try:
-        dict_items = dict(([pkg.pid, toDict(pkg)] for pkg in PYLOAD.getQueue()))
+        def pkg_items():
+            for pid, pkg in ([pkg.pid, toDict(pkg)] for pkg in PYLOAD.getQueue()):
+                if request.method == 'POST' and str(pid) in request.json[u'pids']:
+                    # compliment links info
+                    pkgdata = PYLOAD.getPackageData(pid)
+                    # TODO consider to make toDict() reqursive
+                    pkgdict = toDict(pkgdata)
+                    pkgdict['links'] = [toDict(fileobj) for fileobj in pkgdict['links']]
+                    yield pid, pkgdict
+                elif request.method == 'GET':
+                    del pkg['links']
+                    yield pid, pkg
+
+
+        dict_items = dict(pkg_items())
         for pkg in dict_items.values():
             pkg['dest'] = 'queue' if pkg['dest'] == 1 else 'collector'
-            del pkg['links']
         return dict_items
 
     except Exception as e:
@@ -80,13 +98,12 @@ def packages():
 @route("/json/package/<id:int>")
 @login_required('LIST')
 def package(id):
-    invert_pyfile_status_map = dict((reversed(kvp) for kvp in PyFile.statusMap.iteritems()))
     try:
         data = toDict(PYLOAD.getPackageData(id))
         data["links"] = [toDict(x) for x in data["links"]]
 
         for pyfile in data["links"]:
-            pyfile['status'] = invert_pyfile_status_map[pyfile['status']]
+            pyfile['status'] = _invert_pyfile_status_map[pyfile['status']]
 
         tmp = data["links"]
         tmp.sort(key=get_sort_key)
@@ -145,6 +162,20 @@ def parse_urls():
             parsed_urls.append({'url': url, 'plugin': plugin})
     return {'urls': parsed_urls}
 
+@route("/json/restart_files", method="POST")
+@login_required('MODIFY')
+def restart_files():
+    files_list = (int(fid) for fid in request.json[u'files_list'])
+    for fid in files_list:
+        PYLOAD.restartFile(fid)
+    return {"response": "success"}
+
+@route("/json/abort_files", method="POST")
+@login_required('MODIFY')
+def abort_files():
+    files_list = (int(fid) for fid in request.json[u'files_list'])
+    PYLOAD.stopDownloads(files_list)
+    return {"response": "success"}
 
 @route("/json/add_package")
 @route("/json/add_package", method="POST")

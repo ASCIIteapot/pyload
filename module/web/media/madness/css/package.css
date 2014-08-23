@@ -131,6 +131,19 @@
     margin-left: 5px;
 }
 
+.pyload-package .files td.info-data{
+    padding: 0;
+}
+
+.pyload-package .files td.info-data > div{
+    display: flex;
+    justify-content: space-between;
+}
+
+.pyload-package .files td.info-data .info-text{
+    padding: 8px;
+}
+
 /*
    package details
 */

@@ -120,6 +120,18 @@ var Package = React.createClass({
                 folder_follow_name: details.folder == details.name
             };
     },
+    restart_file_command: function(file){
+        DoAjaxJsonRequest({
+            url: '/json/restart_files',
+            data: { files_list: [file.fid]}
+        }, 'Перезапуск файла '+file.url);
+    },
+    abort_file_command: function(file){
+        DoAjaxJsonRequest({
+            url: '/json/abort_files',
+            data: { files_list: [file.fid]}
+        }, 'Остановка файла '+file.url);
+    },
     get_files_vdom : function(){
         var state = this.state;
         var files_elements = state.details().links.map(function(file, index){
@@ -153,15 +165,57 @@ var Package = React.createClass({
 
             var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
 
+            var restart_file = function(){this.restart_file_command(file)}.bind(this);
+            var abort_file = function(){this.abort_file_command(file)}.bind(this);
+
+            if('status-data' in file){
+                return (<tr className={cs(links_class)}>
+                       <td>{index}</td>
+                       <td>{file.name}</td>
+                       <td>{file.plugin}</td>
+                       <td>{file.statusmsg}: <span>{file['status-data'].percent}</span>%</td>
+                       {file.size ? size : <td></td> }
+                       <td className='info-data'>
+                           <div>
+                               <span className='info-text'>{file['status-data'].info}</span>
+                                <div className="btn-group">
+                                  <button type="button" className="btn btn-default"
+                                        onClick={restart_file}>
+                                      <span className='glyphicon glyphicon-refresh'></span>
+                                  </button>
+                                  <button type="button" className="btn btn-default"
+                                        onClick={abort_file}>
+                                      <span className='glyphicon glyphicon-ban-circle'></span>
+                                  </button>
+                                </div>
+                           </div>
+                       </td>
+                    </tr>)
+            }
+
             return (<tr className={cs(links_class)}>
                        <td>{index}</td>
                        <td>{file.name}</td>
                        <td>{file.plugin}</td>
                        <td>{file.statusmsg}</td>
                        {file.size ? size : <td></td> }
-                       <td>{file.error}</td>
+                       <td className='info-data'>
+                           <div>
+                               <span className='info-text'>{file.error}</span>
+                                <div className="btn-group">
+                                  <button type="button" className="btn btn-default"
+                                        onClick={restart_file}>
+                                      <span className='glyphicon glyphicon-refresh'></span>
+                                  </button>
+                                  <button type="button" className="btn btn-default"
+                                        onClick={abort_file}>
+                                      <span className='glyphicon glyphicon-ban-circle'></span>
+                                  </button>
+                                </div>
+                           </div>
+                       </td>
                     </tr>);
-        });
+        }.bind(this));
 
         return (<div className='files'>
                         <table className="table table-hover">
@@ -247,6 +301,7 @@ var Package = React.createClass({
     },
     get_package_details_vdom: function(){
 
+        // HACK: Если данные пакета не изменены, то они при перерисовке сбрасываются на данные пакета
         if(! this.state.show_package_save){
             this.create_details_form_data();
         }
@@ -454,22 +509,59 @@ var PackageQueue = React.createClass({
         setInterval(this.loadPackagesFromServer, this.props.pollInterval);
     },
     loadPackagesFromServer: function(){
-        $.ajax({
-          url: '/json/packages',
-          dataType: 'json',
-          success: function(data) {
-              for(pid in this.state){
-                  if(pid in data)
-                  {
-                    data[pid]['links']=this.state[pid]['links'];
-                  }
-              }
-              this.setState(data);
-          }.bind(this),
-          error: function(xhr, status, err) {
-            console.error(this.props.url, status, err.toString());
-          }.bind(this)
-        });
+        // определяем функцию ajax запроса для подачи её в 'map'
+        var ajaxCallFunction = function(reqpar, callback){
+            DoAjaxJsonRequest(reqpar).
+                done(function( data, textStatus, jqXHR ){
+                    callback(null, data);
+                }).
+                fail(function( jqXHR, status, err ) {
+                    callback(arguments, null);
+                });
+        };
+
+        // получаем список пакетов для которых должны быть загружена информация о файлах
+        var load_files=[];
+        for(pid in this.state){
+            if(this.state[pid].load_files){
+                load_files.push(pid);
+            }
+        }
+        // console.log('load_files', load_files);
+
+        // формируем запросы
+        var requests=[
+            // список 'всех' пакетов в очереди/хранилеще
+            {url: '/json/packages', method: 'GET'},
+            // список активных закачек
+            {url: '/json/links', method: 'GET'},
+            // загрзука файлов для выбранных пакетов
+            {url: '/json/packages', method: 'POST', data:{pids: load_files}}
+        ];
+
+        async.map(requests, ajaxCallFunction,
+            function(err, results){
+                // выполняем комплиментацию результатов
+                // console.log(results);
+                // console.log(err);
+                var packages = results[0];
+
+                // добавляем информацию о файлах
+                for(pid in results[2]){
+                    packages[pid]=results[2][pid];
+                    packages[pid].load_files=true;
+                }
+
+                results[1]['links'].forEach(function(link, index){
+                    var package_ = packages[link.packageID];
+                    if('links' in package_){
+                        var file_ = _.find(package_.links, function(item){return item.fid == link.fid});
+                        file_['status-data'] = link;
+                    }
+                });
+
+                this.setState(packages);
+            }.bind(this));
     },
     getPackageState: function(pid){
         // получение информации для указнного пакета
@@ -481,43 +573,7 @@ var PackageQueue = React.createClass({
      * @enable: enables lookup for files change. If enabled then files info fetched from server via /json/package/<id> and call forceUpdate when necessary/
      * */
     lookupFiles: function(pid, /*bool*/ enable){
-        var package = this.state[pid];
-        if(enable){
-            function computeLinks(links, func){
-                var size=0;
-                var count=0;
-                for(index in links){
-                   var item=links[index];
-                   if(func==null || func(item.status)){
-                       size+=item.size;
-                       count++;
-                   }
-                }
-                return {size: size, count: count};
-            }
-            $.ajax({
-              url: '/json/package/'+pid,
-              dataType: 'json',
-              success: function(data) {
-                  var done = computeLinks(data.links, function(status){return status == 'finished'});
-                  data.linksdone = done.count;
-                  data.sizedone = done.size;
-
-                  var total = computeLinks(data.links);
-                  data.linkstotal = total.count;
-                  data.sizetotal = total.size;
-
-                  this.state[pid]=data;
-                  this.refs['p_'+pid].forceUpdate();
-              }.bind(this),
-              error: function(xhr, status, err) {
-                console.error('/json/package/'+this.props.pid, status, err.toString());
-              }.bind(this)
-            });
-        }
-        else{
-            package.files=[];
-        }
+        this.state[pid].load_files = enable;
     },
     render: function(){
         var l18n = this.props.l18n;

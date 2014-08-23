@@ -4,7 +4,7 @@
 
 function ShowNotify(description, params){
     var invoke_params = {
-        ele: '#body-container',
+//        ele: '#body-container',
         offset: {from: 'top', amount: 60}
     };
     $.extend(invoke_params, params);
@@ -23,15 +23,23 @@ function DoAjaxJsonRequest(ajaxArguments, callDescription){
 
     ajax_params.data = JSON.stringify(ajax_params.data);
 
-    return $.ajax(ajax_params)
-        .done(function( data, textStatus, jqXHR ) {
-            console.log('Ajax ssly complited for ', callDescription, '; ', this.url);
-            ShowNotify(callDescription, {type: 'success'});
+    var ajaxRet = $.ajax(ajax_params);
+
+    if(callDescription!=null){
+        ajaxRet.done(function( data, textStatus, jqXHR ) {
+            if(callDescription != null){
+                console.log('Ajax ssly complited for ', callDescription, '; ', this.url);
+                ShowNotify(callDescription, {type: 'success'});
+            }
         })
         .fail(function( jqXHR, status, err ) {
             console.error('Ajax filed for ', callDescription, '; ', this.url, status, err.toString());
             ShowNotify(callDescription, {type: 'danger'});
         });
+    }
+
+    return ajaxRet;
+
 }
 
 function onActionClick(elem){

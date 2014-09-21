@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from os.path import join
 from traceback import print_exc
 from shutil import copyfileobj
 
+from os.path import join
 from bottle import route, request, HTTPError
 from webinterface import PYLOAD
 from utils import login_required, render_to_response, toDict
@@ -80,6 +80,11 @@ def packages():
                     # TODO consider to make toDict() reqursive
                     pkgdict = toDict(pkgdata)
                     pkgdict['links'] = [toDict(fileobj) for fileobj in pkgdict['links']]
+
+                    # normolize status msg
+                    for link in pkgdict['links']:
+                        link['status'] = _invert_pyfile_status_map[link['status']]
+
                     yield pid, pkgdict
                 elif request.method == 'GET':
                     del pkg['links']

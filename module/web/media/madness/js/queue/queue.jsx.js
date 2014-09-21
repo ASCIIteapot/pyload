@@ -140,28 +140,33 @@ var Package = React.createClass({
 
             var super_status_map = {
                 'super-finished': ["finished"],
-                'super-queue': ['online', 'queued'],
-                'super-offline' : ['offline', 'aborted'],
+                'super-queue': ['queued'],
+                'super-error' : ['offline', 'aborted', 'failed', 'temp. offline'],
                 'super-waiting': ['waiting'],
-                'super-failed': ['failed'],
-                'super-skipped': ['skipped'],
-                'super-processing': ['custom', 'processing']
-                // all other
-                // 'super-downloading': ['downloading']
+                'super-neutral': ['skipped', 'online', 'unknown'],
+                'super-processing': ['custom', 'processing', 'downloading', 'starting', 'decrypting']
             };
 
             // setup super status
-            var super_setted = false;
+            var super_setted = null;
             for(super_item in super_status_map){
                 if(super_status_map[super_item].indexOf(file.status)>-1){
                    links_class[super_item] = true;
-                   super_setted = true;
+                   super_setted = super_item;
                    break;
                 }
             }
-            if(! super_setted){
-               links_class['super-downloading'] = true;
-            }
+
+            var status_icon_map={
+                'super-finished': 'status-icon glyphicon glyphicon-ok',
+                'super-queue': 'status-icon glyphicon glyphicon-time',
+                'super-error': 'status-icon glyphicon glyphicon-warning-sign',
+                'super-waiting': 'status-icon glyphicon glyphicon-time',
+                'super-processing': 'status-icon glyphicon glyphicon-forward'
+            };
+
+            var status_icon = (<span className={status_icon_map[super_setted]}></span>);
+
 
             var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
 
@@ -171,13 +176,26 @@ var Package = React.createClass({
             if('status-data' in file){
                 return (<tr className={cs(links_class)}>
                        <td>{index}</td>
-                       <td>{file.name}</td>
-                       <td>{file.plugin}</td>
-                       <td>{file.statusmsg}: <span>{file['status-data'].percent}</span>%</td>
+                       <td>
+                           <span className='oneline-ellipsis'>
+                                 {file.name}
+                           </span>
+                       </td>
+                       <td>
+                           <span className='oneline-ellipsis'>
+                                {file.plugin}
+                           </span>
+                       </td>
+                       <td>
+                            <span className='status-data'>
+                                {status_icon}
+                                {file.statusmsg}: <span>{file['status-data'].percent}</span>%
+                            </span>
+                       </td>
                        {file.size ? size : <td></td> }
                        <td className='info-data'>
                            <div>
-                               <span className='info-text'>{file['status-data'].info}</span>
+                               <span className='info-text oneline-ellipsis'>{file['status-data'].info}</span>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
                                         onClick={restart_file}>
@@ -195,13 +213,26 @@ var Package = React.createClass({
 
             return (<tr className={cs(links_class)}>
                        <td>{index}</td>
-                       <td>{file.name}</td>
-                       <td>{file.plugin}</td>
-                       <td>{file.statusmsg}</td>
+                       <td>
+                           <span className='oneline-ellipsis'>
+                                 {file.name}
+                           </span>
+                       </td>
+                       <td>
+                           <span className='oneline-ellipsis'>
+                                {file.plugin}
+                           </span>
+                       </td>
+                       <td>
+                            <span className='status-data'>
+                                {status_icon}
+                            {file.statusmsg}
+                            </span>
+                       </td>
                        {file.size ? size : <td></td> }
                        <td className='info-data'>
                            <div>
-                               <span className='info-text'>{file.error}</span>
+                               <span className='info-text oneline-ellipsis'>{file.error}</span>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
                                         onClick={restart_file}>
@@ -219,6 +250,12 @@ var Package = React.createClass({
 
         return (<div className='files'>
                         <table className="table table-hover">
+                            <col/>
+                            <col className='column-name'/>
+                            <col/>
+                            <col/>
+                            <col/>
+                            <col className='column-info'/>
                             <thead>
                                 <tr>
                                     <th>#</th>

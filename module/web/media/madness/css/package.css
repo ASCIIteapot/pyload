@@ -6,10 +6,6 @@
     font-weight: 400;
 }
 
-.pyload-package > .files{
-    min-height: 50px;
-}
-
 .pyload-package > .header{
     padding: 10px;
     font-size: 21pt;
@@ -47,7 +43,7 @@
 }
 
 .package-control .btn-group .btn img{
-    max-height: 27px;
+    max-height: 20px;
 }
 
 /*
@@ -110,20 +106,20 @@
 /*
     links
 */
-.pyload-package tr.super-finished{
-    background: #CCFFCC;
+.pyload-package tr.super-finished .status-icon{
+    color: #99FF99;
 }
 
-.pyload-package tr.super-failed{
-    background: #FFB4B4;
+.pyload-package tr.super-error .status-icon{
+    color: #FF5C8A;
 }
 
-.pyload-package tr.super-waiting{
-    background: #E9D2D3;
+.pyload-package tr.super-waiting .status-icon{
+    color: #F77C1E;
 }
 
-.pyload-package tr.super-queue{
-    background: #A381BD;
+.pyload-package tr.super-queue .status-icon{
+    color: #93278F;
 }
 
 .pyload-package tr .units{
@@ -222,4 +218,68 @@
 .form-footer .btn + .btn {
     margin-bottom: 0px;
     margin-left: 5px;
+}
+
+/* Кнопки в пакете и ссылках*/
+.package-control{
+    font-size: 14px;
+}
+
+.package-control .btn-group > .btn,
+.files .info-data .btn-group > .btn{
+    border-radius: 0px;
+}
+
+.package-control .btn-group > .btn:not(:last-child),
+.pyload-package .files .info-data .btn-group > .btn:not(:last-child){
+    margin-right: 5px;
+}
+
+.package-control .btn-group > .btn.btn-default,
+.pyload-package .files .info-data .btn-group > .btn.btn-default{
+    background-color: #E6E6E6;
+}
+
+/*сокрытие*/
+.pyload-package .files tr:not(:hover) .info-data .btn-group{
+    /*display: none;*/
+}
+
+.pyload-package .files .status-data > *:not(:last-child){
+    margin-right: 5px;
+}
+
+.oneline-ellipsis{
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    display:inline-block;
+
+    width: inherit;
+}
+
+/* установка жёстких размеров колонок и элементах в них*/
+.pyload-package .files tr td:nth-child(1){
+    width: 45px;
+}
+
+.pyload-package .files tr td:nth-child(2){
+    width: 400px;
+}
+
+.pyload-package .files tr td:nth-child(3){
+    width: 100px;
+}
+
+.pyload-package .files .info-data > div{
+    width: 350px;
+}
+
+.pyload-package .files .info-data div.btn-group{
+    display: inline-flex;
+}
+
+.pyload-package > .files{
+    min-height: 50px;
+    table-layout: fixed;
 }

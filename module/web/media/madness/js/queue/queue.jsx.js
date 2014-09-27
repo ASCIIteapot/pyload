@@ -173,43 +173,34 @@ var Package = React.createClass({
             var restart_file = function(){this.restart_file_command(file)}.bind(this);
             var abort_file = function(){this.abort_file_command(file)}.bind(this);
 
-            if('status-data' in file){
-                return (<tr className={cs(links_class)}>
-                       <td>{index}</td>
-                       <td>
-                           <span className='oneline-ellipsis'>
-                                 {file.name}
-                           </span>
-                       </td>
-                       <td>
-                           <span className='oneline-ellipsis'>
-                                {file.plugin}
-                           </span>
-                       </td>
-                       <td>
-                            <span className='status-data'>
-                                {status_icon}
-                                {file.statusmsg}: <span>{file['status-data'].percent}</span>%
-                            </span>
-                       </td>
-                       {file.size ? size : <td></td> }
-                       <td className='info-data'>
-                           <div>
-                               <span className='info-text oneline-ellipsis'>{file['status-data'].info}</span>
-                                <div className="btn-group">
-                                  <button type="button" className="btn btn-default"
-                                        onClick={restart_file}>
-                                      <span className='glyphicon glyphicon-refresh'></span>
-                                  </button>
-                                  <button type="button" className="btn btn-default"
-                                        onClick={abort_file}>
-                                      <span className='glyphicon glyphicon-ban-circle'></span>
-                                  </button>
-                                </div>
-                           </div>
-                       </td>
-                    </tr>)
-            }
+            var file_info = function(){
+                if('status-data' in file){
+                    var stdata = file['status-data'];
+
+                    var items = [];
+                    if(super_setted == 'super-processing' &&  stdata.percent){
+                        items[items.length]=<span className='progress-proc with-units'>
+                                                <span className='value'>{stdata.percent}</span>
+                                                <span className='units'>%</span>
+                                             </span>;
+                    }
+
+                    var speed = toHuman(stdata.speed);
+                    items[items.length]=(<span>
+                                            <span className='eta'>{stdata.format_eta}</span>
+                                            <span className='delimiter'>@</span>
+                                            <span className='with-units'>
+                                                <span className='value'>{speed.size}</span>
+                                                <span className='units'>{speed.units}/s</span>
+                                            </span>
+                                         </span>);
+
+                    return items;
+                }
+                else{
+                    return <span title={file.error}>{file.error}</span>;
+                }
+            }.bind(this);
 
             return (<tr className={cs(links_class)}>
                        <td>{index}</td>
@@ -226,13 +217,13 @@ var Package = React.createClass({
                        <td>
                             <span className='status-data'>
                                 {status_icon}
-                            {file.statusmsg}
+                                {file.statusmsg}
                             </span>
                        </td>
                        {file.size ? size : <td></td> }
                        <td className='info-data'>
                            <div>
-                               <span className='info-text oneline-ellipsis'>{file.error}</span>
+                               <span className='info-text oneline-ellipsis'>{file_info()}</span>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
                                         onClick={restart_file}>
@@ -274,7 +265,7 @@ var Package = React.createClass({
         var links_progress = Math.round((this.state.details().linksdone / this.state.details().linkstotal)*100);
         return (<div className='base-info'>
             <div className='name-rel horisontal-spaced-container'>
-                <span className='name'>{this.state.details().name}</span>
+                <span className='name oneline-ellipsis'>{this.state.details().name}</span>
                 <div className='package-control btn-toolbar aux-info'>
                     <div className='btn-group package-primary'>{package_control_items.map(mapControlItem)}</div>
                     <div className='btn-group package-restart'>{restart_items.map(mapControlItem)}</div>
@@ -585,7 +576,7 @@ var PackageQueue = React.createClass({
 
                 // добавляем информацию о файлах
                 for(pid in results[2]){
-                    packages[pid]=results[2][pid];
+                    packages[pid].links=results[2][pid].links;
                     packages[pid].load_files=true;
                 }
 
@@ -603,6 +594,7 @@ var PackageQueue = React.createClass({
     getPackageState: function(pid){
         // получение информации для указнного пакета
         return this.state[pid];
+        this.forceUpdate();
     },
 
     /**
@@ -611,6 +603,7 @@ var PackageQueue = React.createClass({
      * */
     lookupFiles: function(pid, /*bool*/ enable){
         this.state[pid].load_files = enable;
+        this.loadPackagesFromServer();
     },
     render: function(){
         var l18n = this.props.l18n;

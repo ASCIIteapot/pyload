@@ -21,8 +21,11 @@
     margin-right: 15px;
 }
 
+
+/* HACK: необходтимо для правильного отображения длинных заголовков и кнопок в пакете*/
 .pyload-package > .header .name-rel{
     margin-right: auto;
+    widows: -moz-available;
 }
 
 .pyload-package .package-status{
@@ -40,10 +43,19 @@
 .pyload-package .delimiter{
     margin-right: 5px;
     margin-left: 5px;
+    color: #999999;
 }
 
 .package-control .btn-group .btn img{
     max-height: 20px;
+}
+
+/*
+    with units item
+*/
+
+.with-units .units{
+    color: #999999;
 }
 
 /*
@@ -122,9 +134,13 @@
     color: #93278F;
 }
 
+.pyload-package tr.super-processing .status-icon{
+    color: #3FA9F5;
+}
+
 .pyload-package tr .units{
     color: #999999;
-    margin-left: 5px;
+    /*margin-left: 5px;*/
 }
 
 .pyload-package .files td.info-data{
@@ -134,10 +150,19 @@
 .pyload-package .files td.info-data > div{
     display: flex;
     justify-content: space-between;
+    width: inherit;
 }
 
 .pyload-package .files td.info-data .info-text{
     padding: 8px;
+}
+
+.info-text .progress-proc{
+    margin-right: 5px;
+}
+
+.info-text .value{
+    font-weight: bold;
 }
 
 /*
@@ -242,7 +267,11 @@
 
 /*сокрытие*/
 .pyload-package .files tr:not(:hover) .info-data .btn-group{
-    /*display: none;*/
+    display: none;
+}
+
+.pyload-package .files .status-data{
+    white-space:nowrap;
 }
 
 .pyload-package .files .status-data > *:not(:last-child){
@@ -271,7 +300,8 @@
     width: 100px;
 }
 
-.pyload-package .files .info-data > div{
+/*.pyload-package .files .info-data > div{*/
+.pyload-package .files tr td:nth-child(6){
     width: 350px;
 }
 

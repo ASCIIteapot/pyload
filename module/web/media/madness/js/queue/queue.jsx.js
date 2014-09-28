@@ -53,20 +53,25 @@ var package_control_items=[
     }
 ];
 
-function mapControlItem(val, index){
+function mapControlItem(pid){
+
     var classes = {
         'btn': true,
         'btn-default': true
     };
 
-    classes[val.action]=true;
+    return function(val, index){
+        classes[val.action]=true;
 
-    return (<button type="button" className={cs(classes)}
-                       data-action={val.action}
-                       key={val.id}
-                       rel="tooltip" data-toggle="tooltip" data-placement="bottom" title={val.description}>
-                <img src={val.icon} alt={val.name}></img>
-            </button>)
+        return (<button type="button" className={cs(classes)}
+                           data-action={val.action}
+                           data-pid={pid}
+                           key={val.id}
+                           onClick={onPackageActionClick}
+                           rel="tooltip" data-toggle="tooltip" data-placement="bottom" title={val.description}>
+                    <img src={val.icon} alt={val.name}></img>
+                </button>)
+    }
 }
 
 
@@ -267,8 +272,8 @@ var Package = React.createClass({
             <div className='name-rel horisontal-spaced-container'>
                 <span className='name oneline-ellipsis'>{this.state.details().name}</span>
                 <div className='package-control btn-toolbar aux-info'>
-                    <div className='btn-group package-primary'>{package_control_items.map(mapControlItem)}</div>
-                    <div className='btn-group package-restart'>{restart_items.map(mapControlItem)}</div>
+                    <div className='btn-group package-primary'>{package_control_items.map(mapControlItem(this.props.pid))}</div>
+                    <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.props.pid))}</div>
                 </div>
             </div>
 
@@ -328,11 +333,7 @@ var Package = React.createClass({
             return name + '_' +this.props.pid;
     },
     get_package_details_vdom: function(){
-
-        // HACK: Если данные пакета не изменены, то они при перерисовке сбрасываются на данные пакета
-        if(! this.state.show_package_save){
-            this.create_details_form_data();
-        }
+        var details = this.state.details();
 
         var labelClass = cs({
             'control-label': true,
@@ -342,23 +343,8 @@ var Package = React.createClass({
         var folderButtonClass = cs({
             'btn': true,
             'btn-default': true,
-            'active': this.state.package_form_details.folder_follow_name
+            'active': details.name == details.folder
         });
-
-        var resetFunc=function(){
-            this.resetPackageDetailForm();
-            this.state.show_package_save = false;
-            this.forceUpdate();
-        }.bind(this);
-
-        var footer=<div className='form-footer'>
-                        <button
-                            type="reset"
-                            className='btn btn-default'
-                            onClick={resetFunc}>Отмена</button>
-                        <button className='btn btn-primary'
-                            type="submit">Сохранить</button>
-                    </div>;
 
         return (<form className='package-details form-horizontal'
                     onSubmit={this.commitPackageChanges}
@@ -388,14 +374,15 @@ var Package = React.createClass({
                                    name='pack_name'
                                    className="form-control" placeholder="Имя пакета"
                                    onChange={this.onPackagePropertyChanged}
-                                   value={this.state.package_form_details.name}/>
+                                   value={details.name}/>
                         </div>
                     </div>
                     <div className="form-group">
                         <label className={labelClass} for={this.create_id('folder')}>
                             <div className='horisontal-spaced-container'>
                                 <span>Папка сохранения</span>
-                                <button type="button" className={folderButtonClass} data-toggle="button"
+                                <button type="button" className={folderButtonClass}
+                                        data-toggle="button"
                                         ref='folder_link_button'
                                         id={this.create_id('follownamebutton')}
                                         onClick={this.onPackagePropertyChanged}
@@ -411,7 +398,7 @@ var Package = React.createClass({
                                     ref='pfolder' name='pack_folder'
                                 className="form-control" placeholder="Папка сохранения"
                                     onChange={this.onPackagePropertyChanged}
-                                value={this.state.package_form_details.folder}/>
+                                value={details.folder}/>
                         </div>
                     </div>
                     <div className="form-group">
@@ -427,71 +414,17 @@ var Package = React.createClass({
                                 ref='ppass' name='pack_pws'
                                 className="form-control" placeholder="Пароли"
                                 onChange={this.onPackagePropertyChanged}
-                                value={this.state.package_form_details.password}></textarea>
+                                value={details.password}></textarea>
                         </div>
                     </div>
-                    { this.state.show_package_save ? footer: null}
                 </form>)
     },
-    commitPackageChanges: function(){
-        var packageData = {
-            pack_id: this.props.pid,
-            pack_name: this.state.package_form_details.name,
-            pack_folder: this.state.package_form_details.folder,
-            pack_pws: this.state.package_form_details.password
-        };
-
-        DoAjaxJsonRequest({
-            url: '/json/edit_package',
-            data: packageData
-        }, 'edit package '+this.props.pid).done(function(){
-            this.resetPackageDetailForm();
-            //this.forceUpdate();
-            }.bind(this));
-        return false;
-    },
-    // метод сбрасывает значения полей формы деталей пакета на умолчательные, соотвествующие таковым в объекте состояния
-    resetPackageDetailForm: function(){
-        this.create_details_form_data();
-        this.state.show_package_save = false;
-    },
     onPackagePropertyChanged: function(event){
-        var detials_form = this.state.package_form_details;
-        var process = true;
-        if(event.target.id == this.create_id('folder')){
-            // имя папки изменилось, необходимо сбросить переключатель следования имени пакета
-            detials_form.folder = event.target.value;
-            if(detials_form.folder_follow_name){
-                detials_form.folder_follow_name = detials_form.folder == detials_form.name;
-            }
-
-            this.forceUpdate();
-        }
-        else if(event.target.id == this.create_id('name')){
-            detials_form.name = event.target.value;
-            if(detials_form.folder_follow_name){
-                detials_form.folder = detials_form.name;
-            }
-        }
-        else if(event.target.id == this.create_id('follownamebutton')){
-            detials_form.folder_follow_name = ! detials_form.folder_follow_name;
-            if(detials_form.folder_follow_name){
-                process = detials_form.folder != detials_form.name;
-                detials_form.folder = detials_form.name;
-            }
-        }
-        else if(event.target.id == this.create_id('passwords')){
-            detials_form.password = event.target.value;
-        }
-
-        if(process){
-            this.processPackageDataChange();
-        }
-        this.forceUpdate();
-    },
-    processPackageDataChange: function(){
-        console.log('process');
-        this.state.show_package_save = true;
+        // какое - то из свойств пакета - изменилось
+        editPackage(this.props.pid, {
+            source: event.target.name,
+            value: event.target.value
+        })
     },
     render : function(){
         // только для расширенного режима, пока отложим и будем работать с сокращёными данными

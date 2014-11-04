@@ -115,25 +115,19 @@ var PackageEditorModal = React.createClass({
 
     commitPackageChanges: function(){
         var packageData = {
-            pack_id: this.props.pid,
-            pack_name: this.state.package_form_details.name,
-            pack_folder: this.state.package_form_details.folder,
-            pack_pws: this.state.package_form_details.password
+            pack_id: this.state.work_info.pid,
+            pack_name: this.state.work_info.name,
+            pack_folder: this.state.work_info.folder,
+            pack_pws: this.state.work_info.password
         };
 
         DoAjaxJsonRequest({
             url: '/json/edit_package',
             data: packageData
-        }, 'edit package '+this.props.pid).done(function(){
-            this.resetPackageDetailForm();
-            //this.forceUpdate();
+        }, 'edit package '+this.state.work_info.pid).done(function(){
+            $('#edit_package_modal').modal('hide');
             }.bind(this));
         return false;
-    },
-    // метод сбрасывает значения полей формы деталей пакета на умолчательные, соотвествующие таковым в объекте состояния
-    resetPackageDetailForm: function(){
-        this.create_details_form_data();
-        this.state.show_package_save = false;
     },
     onPackagePropertyChanged: function(event){
         var target = event.target.name;
@@ -172,6 +166,30 @@ var PackageEditorModal = React.createClass({
             return 'editp_' + name;
     },
 
+    get_files_vdom: function(){
+
+        var conv_files_func = function(item, index){
+            return (<tr>
+                        <td>{item.name}</td>
+                        <td>{item.url}</td>
+                        <td>{item.statusmsg}</td>
+                    </tr>)
+        };
+
+        return (<table className='table table-striped table-hover table-bordered '>
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Ссылка</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {this.state.work_info.links.map(conv_files_func)}
+                    </tbody>
+                </table>)
+    },
+
     render: function(){
         if('init_info'in this.state){
             var folderButtonClass = cs({
@@ -182,10 +200,10 @@ var PackageEditorModal = React.createClass({
 
             return (<form className="modal-dialog"
                               role="form"
-                              action=""
+                              action="/json/edit_package"
                               method="POST"
                               enctype='application/json'
-                              onsubmit="return OnAjaxFormSubmit(this);">
+                              onSubmit={this.commitPackageChanges}>
                             <div className="modal-content">
                                 <div className="modal-header">
                                     <button type="button" className="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
@@ -207,7 +225,7 @@ var PackageEditorModal = React.createClass({
                                     </div>
 
                                     <div className="form-group">
-                                        <label for={this.create_id('edit_folder')}>Имя пакета</label>
+                                        <label for={this.create_id('edit_folder')}>Папка сохранения</label>
                                             <button type="button" className={folderButtonClass} data-toggle="button"
                                             ref='folder_link_button'
                                             name='folder_link_button'
@@ -236,12 +254,17 @@ var PackageEditorModal = React.createClass({
                                             className="form-control" placeholder="Пароли"
                                             value={this.state.work_info.password}></textarea>
                                     </div>
+
+                                    <div className="form-group">
+                                        <label for={this.create_id('exist_files')}>Файлы</label>
+                                        {this.get_files_vdom()}
+                                    </div>
                                 </div>
 
                                 <div className="ajaxFail"></div>
                                 <div className="modal-footer">
                                     <button type="reset" className="btn btn-default" data-dismiss="modal">Отмена</button>
-                                    <button type="submit" className="btn btn-primary" name="save" value="collector">Сохранить</button>
+                                    <button type="submit" className="btn btn-primary">Сохранить</button>
                                 </div>
                             </div>
                         </form>);

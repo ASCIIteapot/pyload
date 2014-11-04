@@ -1,0 +1,45 @@
+/*
+Стили для спсика файлов в пакете при их отображениив просмотре пакета и в формах создания/редактирования пакета
+*/
+
+
+/* установка жёстких размеров колонок и элементах в них*/
+.pyload-package .files tr td:nth-child(1){
+    width: 45px;
+}
+
+.pyload-package .files tr td:nth-child(2){
+    width: 400px;
+}
+
+.pyload-package .files tr td:nth-child(3){
+    width: 100px;
+}
+
+/*.pyload-package .files .info-data > div{*/
+.pyload-package .files tr td:nth-child(6){
+    width: 350px;
+}
+
+.pyload-package .files .info-data div.btn-group{
+    display: inline-flex;
+}
+
+.pyload-package > .files{
+    min-height: 50px;
+    table-layout: fixed;
+}
+
+
+/*сокрытие*/
+.pyload-package .files tr:not(:hover) .info-data .btn-group{
+    display: none;
+}
+
+.pyload-package .files .status-data{
+    white-space:nowrap;
+}
+
+.pyload-package .files .status-data > *:not(:last-child){
+    margin-right: 5px;
+}

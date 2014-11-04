@@ -112,7 +112,7 @@ function OnAjaxFormSubmit(form){
         })
         .fail(function( jqXHR, status, err ) {
             // show inform alert msg
-        var alert_box_container = $('#ajaxFail', jform);
+        var alert_box_container = $('.ajaxFail', jform);
         var alert_box = alert_box_container.find('> .alert');
 
         if(alert_box.size() == 0){

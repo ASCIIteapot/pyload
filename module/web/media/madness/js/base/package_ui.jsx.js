@@ -11,7 +11,7 @@ var LinksInputElement=React.createClass({
         this.state.linksrawtext = this.refs.links_text_aria.getDOMNode().value;
         console.log(this.state.linksrawtext);
         DoAjaxJsonRequest({
-            url: this.props.linkParseUrl,
+            url: '/json/parse_urls',
             data: { raw_text: event.target.value }
         }).done(function(data, textStatus, jqXHR){
             this.setupParsedFiles(data.urls);
@@ -65,16 +65,20 @@ var LinksInputElement=React.createClass({
         this.forceUpdate();
      },
     updateCounters: function(){
-       var isNewFile = _.matches({isnew: true});
+        this.state.counters = this.createCounters(this.state.files);
+    },
+    createCounters: function(files){
+        /* Только создание объекта счётчиков */
+        var isNewFile = _.matches({isnew: true});
         var isDuplicateFile = _.matches({doubling: true});
-        this.state.counters = {
-                                overall : _.size(this.state.files),
-                                new_files : _.chain(this.state.files).
-                                            filter(isNewFile).
-                                            size().value(),
-                                duplicated_files : _.chain(this.state.files).
-                                            filter(isDuplicateFile).
-                                            size().value()
+        return {
+                overall : _.size(files),
+                new_files : _.chain(files).
+                            filter(isNewFile).
+                            size().value(),
+                duplicated_files : _.chain(files).
+                            filter(isDuplicateFile).
+                            size().value()
         };
     },
     create_file: function(args){
@@ -110,11 +114,25 @@ var LinksInputElement=React.createClass({
         *   removed,
         *   isDoubling
         * */
+        var existFiles=[];
+        if(this.props.package!=null){
+            existFiles = _.map(this.props.package.links,
+                function(file){
+                    return this.create_file({
+                        url: file.url,
+                        name: file.name,
+                        plugin: file.plugin,
+                        status: file.statusmsg
+                    });
+                }.bind(this))
+        }
+
         return {
             // существующие файлы в пакете
-            existfiles:[],
+            existfiles: existFiles,
             // отображаемые файлы
-            files: [],
+            files: _.map(existFiles, _.clone),
+            counters: this.createCounters(existFiles),
             // текст ссылок
             linksrawtext: "",
             // файл который редактируется в настоящий момент
@@ -164,11 +182,6 @@ var LinksInputElement=React.createClass({
     commitEditingFileImpl: function(){
         var file = this.state.currentlyEditingFile;
         if(file !== null){
-            this.state.currentlyEditingFile = null;
-
-            file.isediting=false;
-            file.url = file.editinglink;
-            file.editinglink = "";
 
             // проверям на дуликаты
             var rm = function(item){
@@ -176,8 +189,10 @@ var LinksInputElement=React.createClass({
                 var index = _.indexOf(collection, item);
                 collection.remove(index);
             }.bind(this);
-            var exist_file = _.chain(this.state.files).difference([file]).first().value();
-            if(exist_file!==null){
+
+            var exist_file = _.chain(this.state.files).difference([file]).where({url: file.editinglink}).first();
+            if(! exist_file.isUndefined()){
+                exist_file = exist_file.value();
                 console.log('Дубликат при редактировании');
                 if(_.has(exist_file, 'fid')){
                     rm(file);
@@ -186,6 +201,13 @@ var LinksInputElement=React.createClass({
                     rm(exist_file);
                 }
             }
+
+            this.state.currentlyEditingFile = null;
+
+            file.isediting=false;
+            file.url = file.editinglink;
+            file.editinglink = "";
+
             this.updateCounters();
             return true;
         }
@@ -212,9 +234,13 @@ var LinksInputElement=React.createClass({
                       className="form-control" rows="3"
                       value={this.state.linksrawtext}
                       onChange={this.handleLinksTextChange}
-                      placeholder={this.props.l18n.links}
+                      placeholder='Ссылки'
                       name="add_links" id="add_links"/>;
-
+        var rawLinksGroup = (
+                    <div class="form-group">
+                        <label htmlFor="add_links">Ссылки</label>
+                        {taria_el}
+                    </div>);
         // показываем поле со ссылками если есть хотя бы одна ссылка
         if(_.any(this.state.files)){
             var items=[];
@@ -273,7 +299,7 @@ var LinksInputElement=React.createClass({
                                 <td>{index+1}</td>
                                 <td>{file.url}</td>
                                 <td>{file.plugin}</td>
-                                <td></td>
+                                <td>{file.status}</td>
                               </tr>);
                 }
 
@@ -297,36 +323,42 @@ var LinksInputElement=React.createClass({
                                             </span>
                                         </button>
                                     </div>);
-            return (<div className='form-group'>
-                        {taria_el}
-                        <label for='parsed_links'>
-                            <span>Разобранные ссылки</span>
-                            <span> </span>
-                            <span>
-                                <span>{this.state.counters.new_files}</span>
-                                <span className='separator'>/</span>
-                                <span>{this.state.counters.duplicated_files}</span>
-                                <span className='separator'>/</span>
-                                <span>{this.state.counters.overall}</span>
-                            </span>
-                        </label>
-                        {addedItemsPresent ? addItemsControl : null}
-                        <table className="table table-condensed table-bordered table-hover parsed_links" id='parsed_links'>
-                            <col width='30px'/>
-                            <thead>
-                                <tr>
-                                    <th>Номер</th>
-                                    <th>Сылка</th>
-                                    <th>Плагин</th>
-                                    <th>Статус</th>
-                                </tr>
-                            </thead>
-                            <tbody>{items}</tbody>
-                        </table>
-                </div>);
+
+
+            var linksList = (<div className='form-group'>
+                                <label htmlFor='parsed_links'>
+                                    <span>Разобранные ссылки</span>
+                                    <span> </span>
+                                    <span>
+                                        <span>{this.state.counters.new_files}</span>
+                                        <span className='separator'>/</span>
+                                        <span>{this.state.counters.duplicated_files}</span>
+                                        <span className='separator'>/</span>
+                                        <span>{this.state.counters.overall}</span>
+                                    </span>
+                                </label>
+                                {addedItemsPresent ? addItemsControl : null}
+                                <table className="table table-condensed table-bordered table-hover parsed_links" id='parsed_links'>
+                                    <col width='30px'/>
+                                    <thead>
+                                        <tr>
+                                            <th>Номер</th>
+                                            <th>Сылка</th>
+                                            <th>Плагин</th>
+                                            <th>Статус</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>{items}</tbody>
+                                </table>
+                            </div>);
+
+            return (<div>
+                        {rawLinksGroup}
+                        {linksList}
+                    </div>);
         }
         else{
-            return <div>{taria_el}</div>;
+            return rawLinksGroup;
         }
     },
     AllLinksOnly:function(){
@@ -422,30 +454,6 @@ var PackageEditorModal = React.createClass({
             return 'editp_' + name;
     },
 
-    get_files_vdom: function(){
-
-        var conv_files_func = function(item, index){
-            return (<tr>
-                        <td>{item.name}</td>
-                        <td>{item.url}</td>
-                        <td>{item.statusmsg}</td>
-                    </tr>)
-        };
-
-        return (<table className='table table-striped table-hover table-bordered '>
-                    <thead>
-                        <tr>
-                            <th>Имя</th>
-                            <th>Ссылка</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {this.state.work_info.links.map(conv_files_func)}
-                    </tbody>
-                </table>)
-    },
-
     render: function(){
         if('init_info'in this.state){
             var folderButtonClass = cs({
@@ -469,7 +477,7 @@ var PackageEditorModal = React.createClass({
 
                                 <div className="modal-body">
                                     <div className="form-group">
-                                        <label for={this.create_id('name')}>Имя пакета</label>
+                                        <label htmlFor={this.create_id('name')}>Имя пакета</label>
                                         <input type="text"
                                                required="true"
                                                className="form-control"
@@ -481,16 +489,23 @@ var PackageEditorModal = React.createClass({
                                     </div>
 
                                     <div className="form-group">
-                                        <label for={this.create_id('edit_folder')}>Папка сохранения</label>
-                                            <button type="button" className={folderButtonClass} data-toggle="button"
-                                            ref='folder_link_button'
-                                            name='folder_link_button'
-                                            onClick={this.onPackagePropertyChanged}
-                                            id={this.create_id('follownamebutton')}
-                                            data-toggle="tooltip" data-placement="top"
-                                            title="Имя папки сохранения связано с именем пакета">
+                                        <label htmlFor={this.create_id('edit_folder')}>
+                                            <span>
+                                                <span>Папка сохранения</span>
+                                                <span> </span>
+                                                <span>
+                                                    <button type="button" className={folderButtonClass} data-toggle="button"
+                                                            ref='folder_link_button'
+                                                            name='folder_link_button'
+                                                            onClick={this.onPackagePropertyChanged}
+                                                            id={this.create_id('follownamebutton')}
+                                                            data-toggle="tooltip" data-placement="top"
+                                                            title="Имя папки сохранения связано с именем пакета">
+                                                    </button>
+                                                </span>
+                                            </span>
+                                            </label>
                                         <span className="glyphicon glyphicon-link"></span>
-                                    </button>
                                         <input type="text"
                                                required="true"
                                                className="form-control"
@@ -502,7 +517,7 @@ var PackageEditorModal = React.createClass({
                                     </div>
 
                                     <div className="form-group">
-                                        <label for={this.create_id('password')}>Пароли</label>
+                                        <label htmlFor={this.create_id('password')}>Пароли</label>
                                         <textarea id={this.create_id('password')} rows='3'
                                             ref='pack_pws'
                                             name='pack_pws'
@@ -511,12 +526,8 @@ var PackageEditorModal = React.createClass({
                                             value={this.state.work_info.password}></textarea>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label for={this.create_id('exist_files')}>Файлы</label>
-                                        {this.get_files_vdom()}
-                                    </div>
+                                    <LinksInputElement package={this.state.work_info}/>
                                 </div>
-
                                 <div className="ajaxFail"></div>
                                 <div className="modal-footer">
                                     <button type="reset" className="btn btn-default" data-dismiss="modal">Отмена</button>

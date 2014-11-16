@@ -22,13 +22,7 @@
                id="add_name" placeholder='{{_("Name")}}'/>
     </div>
 
-    <div class="form-group">
-        <label for="add_package_links_aria">{{_("Links")}}</label>
-        <p class="help-block">
-            {{_("Paste your links here or any text and press the filter button.")}}
-        </p>
-        <div id="add_package_links_aria"></div>
-    </div>
+    <div id="add_package_links_aria"></div>
 
     <div class="form-group">
         <label for="add_password">{{_("Password")}}</label>
@@ -64,7 +58,7 @@ var links_l18n={
 
 
 var addLinksFormInput = React.renderComponent(
-    <LinksInputElement linkParseUrl='/json/parse_urls' l18n={links_l18n}/>,
+    <LinksInputElement/>,
     $('#add_package_links_aria').get(0));
 
 </script>

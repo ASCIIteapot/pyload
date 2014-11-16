@@ -328,6 +328,10 @@ var LinksInputElement=React.createClass({
         else{
             return <div>{taria_el}</div>;
         }
+    },
+    AllLinksOnly:function(){
+        /* Получение полного списка ссылок */
+        return _.pluck(this.state.existfiles, 'url');
     }
 });
 

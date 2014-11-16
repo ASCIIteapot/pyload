@@ -138,7 +138,8 @@ function OnAjaxFormSubmit(form){
 * */
 function OnAddPackageTuneInputs(form_inputs){
     // TODO: consider extract links from REACT component ether from DOM
-    form_inputs.add_links = $('#parsed_links tbody tr td:nth-child(2)', this).map(function () {
-        return $(this).text();
-    }).get();
+//    form_inputs.add_links = $('#parsed_links tbody tr td:nth-child(2)', this).map(function () {
+//        return $(this).text();
+//    }).get();
+    form_inputs.add_links = addLinksFormInput.AllLinksOnly();
 }

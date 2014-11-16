@@ -43,3 +43,29 @@
 .pyload-package .files .status-data > *:not(:last-child){
     margin-right: 5px;
 }
+
+/*
+Установка цветов добавленных, дублирующих и тп файлов в формах добавления
+*/
+.parsed_links tr.isnew{
+    background: #9acfea;
+}
+
+.parsed_links tr.isdoubling{
+    background: #f7e1b5;
+}
+
+/* установка поля редактирования определённой ссылки */
+td.editinglink > div{
+    display: inline-flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+td.editinglink > div > input{
+    width: 100%;
+}
+
+td.editinglink > div > div.btn-group{
+    width: 10%;
+}

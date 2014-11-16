@@ -4,33 +4,122 @@
  */
 
 var LinksInputElement=React.createClass({
-    ajaxRequestInProgress: false,
     /*
     * Handle raw links text change
     * */
     handleLinksTextChange: function(event){
-        if(this.ajaxRequestInProgress){
-            return false;
-        }
-
+        this.state.linksrawtext = this.refs.links_text_aria.getDOMNode().value;
+        console.log(this.state.linksrawtext);
         DoAjaxJsonRequest({
             url: this.props.linkParseUrl,
-            data: { raw_text: event.target.value },
-            beforeSend: function( /* jqXHR */ jqXHR, /* PlainObject */ settings ){
-                this.ajaxRequestInProgress=true;
-            }.bind(this)
+            data: { raw_text: event.target.value }
         }).done(function(data, textStatus, jqXHR){
-            console.log($(data.urls).size());
-            this.setState(data);
-            console.log('setted');
-        }.bind(this))
-          .always(function( data /*|jqXHR*/, textStatus, /*jqXHR|*/ errorThrown ) {
-                this.ajaxRequestInProgress=false;
-          }.bind(this));
-        return false;
+            this.setupParsedFiles(data.urls);
+        }.bind(this));
+    },
+    setupParsedFiles: function(parsed_files){
+        /*
+        * Метод устонавливает разобранные файлы
+        *
+        * Разобранный файл может:
+        *   дублировать сушествующий
+        *   восстонавливать удалённый
+        * */
+
+        // копируем исходные файлы
+        this.state.files = [];
+        console.log(this.state.existfiles);
+        this.state.existfiles.forEach(function(exist_file){
+            this.state.files.push(_.clone(exist_file));
+        }.bind(this));
+
+        // вычисляем существубщие файлы
+        var isRemoved = _.matches({removed: true});
+
+        _.forEach(parsed_files, function(new_file)
+        {
+            var existFile = _.find(this.state.files, function(item){return item.url === new_file.url});
+            if(existFile){
+                // если файл существует
+                if(isRemoved(existFile)){
+                    // и был удалён, то восстонавливаем его
+                    existFile.restored = true;
+                }
+                else{
+                    // в противном случае ставим флаг дублирования
+                    existFile.doubling = true;
+                }
+            }
+            else{
+                // если файл не существует
+                this.state.files.push(
+                    this.create_file({
+                    isnew: true,
+                    url: new_file.url,
+                    plugin: new_file.plugin
+                }));
+            }
+        }.bind(this));
+        // устонавливаем счётчики
+        this.updateCounters();
+        this.forceUpdate();
+     },
+    updateCounters: function(){
+       var isNewFile = _.matches({isnew: true});
+        var isDuplicateFile = _.matches({doubling: true});
+        this.state.counters = {
+                                overall : _.size(this.state.files),
+                                new_files : _.chain(this.state.files).
+                                            filter(isNewFile).
+                                            size().value(),
+                                duplicated_files : _.chain(this.state.files).
+                                            filter(isDuplicateFile).
+                                            size().value()
+        };
+    },
+    create_file: function(args){
+        var defaults = {
+            url: null,
+            plugin: null,
+            status: null,
+            //
+            fid: null,
+            name: null,
+            //
+            isnew: false,
+            restored: false,
+            removed: false,
+            doubling: false,
+            //
+            isediting: false,
+            editinglink: ""
+        };
+        return _.defaults(args, defaults);
     },
     getInitialState: function() {
-        return {urls: []};
+        /*
+        * Состояние есть:
+        *   URL
+        *   Плагин
+        *   Статус (новый, онлайн, ошибка и т.п.)
+        *   // для существующих в пакете файлов
+        *   fid
+        *   имя
+        *   // дополнительный статус
+        *   restored,
+        *   removed,
+        *   isDoubling
+        * */
+        return {
+            // существующие файлы в пакете
+            existfiles:[],
+            // отображаемые файлы
+            files: [],
+            // текст ссылок
+            linksrawtext: "",
+            // файл который редактируется в настоящий момент
+            currentlyEditingFile: null
+        };
     },
     componentDidMount: function(){
         var target=this.getDOMNode();
@@ -39,38 +128,201 @@ var LinksInputElement=React.createClass({
             this.setState(this.getInitialState());
         }.bind(this));
     },
+    resetLinksText:function(event){
+        // сброс введенных ссылок
+        console.log('сброс введенных ссылок');
+        this.discardEditingFile();
+        this.resetParsedFilesImpl();
+        this.forceUpdate();
+    },
+    commitLinksText:function(event){
+        // добавление введенных ссылок
+        console.log('добавление введенных ссылок');
+        this.commitEditingFileImpl();
+        var isnotnew = function(item){return !(item.removed && item.restored)}; // _.matches({removed: true, restored: false});
+        this.state.existfiles = [];
+        _.filter(this.state.files, isnotnew).forEach(function(new_file)
+        {
+            var new_exist_file = _.clone(new_file);
+            new_exist_file.doubling = false;
+            new_exist_file.isnew = false;
+            this.state.existfiles.push(new_exist_file);
+        }.bind(this));
+        this.resetParsedFilesImpl();
+        this.forceUpdate();
+    },
+    resetParsedFilesImpl: function(){
+        this.state.linksrawtext = "";
+        this.setupParsedFiles([]);
+    },
+    enterFileEdit: function(file){
+        this.state.currentlyEditingFile = file;
+        file.isediting=true;
+        file.editinglink = file.url;
+        this.forceUpdate();
+    },
+    commitEditingFileImpl: function(){
+        var file = this.state.currentlyEditingFile;
+        if(file !== null){
+            this.state.currentlyEditingFile = null;
+
+            file.isediting=false;
+            file.url = file.editinglink;
+            file.editinglink = "";
+
+            // проверям на дуликаты
+            var rm = function(item){
+                var collection = this.state.files;
+                var index = _.indexOf(collection, item);
+                collection.remove(index);
+            }.bind(this);
+            var exist_file = _.chain(this.state.files).difference([file]).first().value();
+            if(exist_file!==null){
+                console.log('Дубликат при редактировании');
+                if(_.has(exist_file, 'fid')){
+                    rm(file);
+                }
+                else{
+                    rm(exist_file);
+                }
+            }
+            this.updateCounters();
+            return true;
+        }
+        return false;
+    },
+    commitEditingFile: function(){
+        if(this.commitEditingFileImpl()){
+            this.forceUpdate();
+        }
+    },
+    discardEditingFile: function(){
+        var file = this.state.currentlyEditingFile;
+        if(file !== null){
+            this.state.currentlyEditingFile = null;
+
+            file.isediting=false;
+            file.editinglink = "";
+            this.forceUpdate();
+        }
+    },
     render: function(){
         var taria_el=<textarea key='taria'
+                      ref='links_text_aria'
                       className="form-control" rows="3"
-                      required
+                      value={this.state.linksrawtext}
                       onChange={this.handleLinksTextChange}
                       placeholder={this.props.l18n.links}
                       name="add_links" id="add_links"/>;
 
-        if($(this.state.urls).size()!=0){
+        // показываем поле со ссылками если есть хотя бы одна ссылка
+        if(_.any(this.state.files)){
             var items=[];
 
-            $(this.state.urls).each(function(index, url){
-               items.push(<tr key={url.url}>
-                            <td>{index+1}</td>
-                            <td>{url.url}</td>
-                            <td>{url.plugin}</td>
-                          </tr>);
-            });
+            $(this.state.files).each(function(index, file){
+                var classes = cs({
+                    isnew: file.isnew,
+                    isdoubling: file.doubling,
+                    isediting: file.isediting
+                });
+                var item=null;
+                if(file.isediting){
+                    var accept = function(event){this.commitEditingFile();}.bind(this);
+                    var discard = function(event){this.discardEditingFile();}.bind(this);
+                    var onChanged = function(event){
+                        var new_value = event.target.value;
+                        file.editinglink = new_value;
+                        this.forceUpdate();
+                    }.bind(this);
+                    var keyPressed=function(event){
+                        console.log(event);
+                        if(event.keyCode === 13){ // enter
+                            event.stopPropagation();
+                            event.preventDefault();
+                            this.commitEditingFile(file);
 
-            return (<div>
+                        }
+                        else if(event.keyCode === 27){ // Escape
+                            event.stopPropagation();
+                            event.preventDefault();
+                            this.discardEditingFile(file);
+                        }
+                    }.bind(this);
+                    item = (<tr key={file.url} className={classes} onKeyPress={keyPressed}>
+                                <td>{index+1}</td>
+                                <td className='editinglink' colSpan='3'>
+                                    <div>
+                                        <input value={file.editinglink} onChange={onChanged}/>
+                                        <div className="btn-group" role="group">
+                                          <button type="button" className="btn btn-primary" onClick={accept}>
+                                              <span className='glyphicon glyphicon-ok'></span>
+                                          </button>
+                                          <button type="button" className="btn btn-default" onClick={discard}>
+                                              <span className='glyphicon glyphicon-remove'></span>
+                                          </button>
+                                        </div>
+                                    </div>
+                                </td>
+                              </tr>);
+                }
+                else{
+                    var editLink=function(event){
+                        this.enterFileEdit(file);
+                    }.bind(this);
+                    item = (<tr key={file.url} className={classes} onDoubleClick={editLink}>
+                                <td>{index+1}</td>
+                                <td>{file.url}</td>
+                                <td>{file.plugin}</td>
+                                <td></td>
+                              </tr>);
+                }
+
+               items.push(item);
+            }.bind(this));
+
+            var addedItemsPresent = _.any(this.state.files, function(item){ return item.isnew || item.doubling;});
+            var addItemsControl = (<div className='form-group horisontal-spaced-container'>
+                                        <button type="button" className="btn btn-default" onClick={this.resetLinksText}>
+                                            <span>
+                                                <span className='glyphicon glyphicon-remove-circle'></span>
+                                                <span> </span>
+                                                <span>Очистить</span>
+                                            </span>
+                                        </button>
+                                        <button type="button" className="btn btn-success" onClick={this.commitLinksText}>
+                                            <span>
+                                                <span className='glyphicon glyphicon-plus'></span>
+                                                <span> </span>
+                                                <span>Добавить</span>
+                                            </span>
+                                        </button>
+                                    </div>);
+            return (<div className='form-group'>
                         {taria_el}
-                        <label for='parsed_links'>Parsed links</label>
-                        <table className="table table-condensed table-bordered table-hover" id='parsed_links'>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>link</th>
-                                <th>hoster</th>
-                            </tr>
-                        </thead>
-                        <tbody>{items}</tbody>
-                    </table>
+                        <label for='parsed_links'>
+                            <span>Разобранные ссылки</span>
+                            <span> </span>
+                            <span>
+                                <span>{this.state.counters.new_files}</span>
+                                <span className='separator'>/</span>
+                                <span>{this.state.counters.duplicated_files}</span>
+                                <span className='separator'>/</span>
+                                <span>{this.state.counters.overall}</span>
+                            </span>
+                        </label>
+                        {addedItemsPresent ? addItemsControl : null}
+                        <table className="table table-condensed table-bordered table-hover parsed_links" id='parsed_links'>
+                            <col width='30px'/>
+                            <thead>
+                                <tr>
+                                    <th>Номер</th>
+                                    <th>Сылка</th>
+                                    <th>Плагин</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>{items}</tbody>
+                        </table>
                 </div>);
         }
         else{

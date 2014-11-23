@@ -100,6 +100,29 @@ var LinksInputElement=React.createClass({
         };
         return _.defaults(args, defaults);
     },
+    setupLinksInfo: function(stateObject, propsObject){
+        var existFiles=[];
+        if(propsObject.package!=null){
+            existFiles = _.map(propsObject.package.links,
+                function(file){
+                    return this.create_file({
+                        url: file.url,
+                        name: file.name,
+                        plugin: file.plugin,
+                        status: file.statusmsg
+                    });
+                }.bind(this))
+        }
+        _.extend(stateObject, {
+            // существующие файлы в пакете
+            existfiles: existFiles,
+            // отображаемые файлы
+            files: _.map(existFiles, _.clone),
+            counters: this.createCounters(existFiles)
+        });
+
+        return stateObject;
+    },
     getInitialState: function() {
         /*
         * Состояние есть:
@@ -114,30 +137,26 @@ var LinksInputElement=React.createClass({
         *   removed,
         *   isDoubling
         * */
-        var existFiles=[];
-        if(this.props.package!=null){
-            existFiles = _.map(this.props.package.links,
-                function(file){
-                    return this.create_file({
-                        url: file.url,
-                        name: file.name,
-                        plugin: file.plugin,
-                        status: file.statusmsg
-                    });
-                }.bind(this))
-        }
+        console.log('LinksInputElement.getInitialState for ', this.props.package);
 
-        return {
+
+        var init_state = {
             // существующие файлы в пакете
-            existfiles: existFiles,
+            existfiles: null,
             // отображаемые файлы
-            files: _.map(existFiles, _.clone),
-            counters: this.createCounters(existFiles),
+            files: null,
+            counters: null,
             // текст ссылок
             linksrawtext: "",
             // файл который редактируется в настоящий момент
             currentlyEditingFile: null
         };
+
+        return this.setupLinksInfo(init_state, this.props);
+    },
+    componentWillReceiveProps: function(newProps){
+        console.log('reciving new props', newProps);
+        this.setupLinksInfo(this.state, newProps);
     },
     componentDidMount: function(){
         var target=this.getDOMNode();
@@ -157,6 +176,11 @@ var LinksInputElement=React.createClass({
         // добавление введенных ссылок
         console.log('добавление введенных ссылок');
         this.commitEditingFileImpl();
+        this.commitFilesImpl();
+        this.resetParsedFilesImpl();
+        this.forceUpdate();
+    },
+    commitFilesImpl: function(){
         var isnotnew = function(item){return !(item.removed && item.restored)}; // _.matches({removed: true, restored: false});
         this.state.existfiles = [];
         _.filter(this.state.files, isnotnew).forEach(function(new_file)
@@ -166,8 +190,6 @@ var LinksInputElement=React.createClass({
             new_exist_file.isnew = false;
             this.state.existfiles.push(new_exist_file);
         }.bind(this));
-        this.resetParsedFilesImpl();
-        this.forceUpdate();
     },
     resetParsedFilesImpl: function(){
         this.state.linksrawtext = "";
@@ -209,6 +231,7 @@ var LinksInputElement=React.createClass({
             file.editinglink = "";
 
             this.updateCounters();
+            this.commitFilesImpl();
             return true;
         }
         return false;
@@ -229,6 +252,8 @@ var LinksInputElement=React.createClass({
         }
     },
     render: function(){
+        console.log("LinksInputElement render request");
+        console.log(this.props.package);
         var taria_el=<textarea key='taria'
                       ref='links_text_aria'
                       className="form-control" rows="3"
@@ -363,7 +388,10 @@ var LinksInputElement=React.createClass({
     },
     AllLinksOnly:function(){
         /* Получение полного списка ссылок */
-        return _.pluck(this.state.existfiles, 'url');
+
+        return _.chain(this.state.existfiles).
+            filter(function(item){return (!item.removed) || item.restored;})
+            .pluck('url').value();
     }
 });
 
@@ -373,6 +401,7 @@ var PackageEditorModal = React.createClass({
     },
     beginEditPackage: function(pid, anchor){
         console.log('start editing package', pid, anchor);
+        this.setState({pid: pid});
         this._startingRecivingPackageInfo();
 
         // make request
@@ -380,8 +409,10 @@ var PackageEditorModal = React.createClass({
             url: '/json/package/'+pid,
             method: 'GET'
         }).done(function(data, i1, i2){
+           console.log('receving data for ', pid, ' done');
            // получаем начальное состояние
            this.setState({
+               pid: pid,
                init_info: data,
                work_info: _.clone(data),
                folder_follow_name: data.name == data.folder
@@ -392,8 +423,6 @@ var PackageEditorModal = React.createClass({
                this.refs[anchor.source].getDOMNode().focus();
            }
         }.bind(this));
-
-        this.setState({pid: pid});
     },
 
     _startingRecivingPackageInfo: function(){
@@ -406,7 +435,8 @@ var PackageEditorModal = React.createClass({
             pack_id: this.state.work_info.pid,
             pack_name: this.state.work_info.name,
             pack_folder: this.state.work_info.folder,
-            pack_pws: this.state.work_info.password
+            pack_pws: this.state.work_info.password,
+            pack_links: this.refs.links_input.AllLinksOnly()
         };
 
         DoAjaxJsonRequest({
@@ -455,6 +485,7 @@ var PackageEditorModal = React.createClass({
     },
 
     render: function(){
+        console.log("PackageEditorModal render request");
         if('init_info'in this.state){
             var folderButtonClass = cs({
                 'btn': true,
@@ -493,19 +524,17 @@ var PackageEditorModal = React.createClass({
                                             <span>
                                                 <span>Папка сохранения</span>
                                                 <span> </span>
-                                                <span>
-                                                    <button type="button" className={folderButtonClass} data-toggle="button"
-                                                            ref='folder_link_button'
-                                                            name='folder_link_button'
-                                                            onClick={this.onPackagePropertyChanged}
-                                                            id={this.create_id('follownamebutton')}
-                                                            data-toggle="tooltip" data-placement="top"
-                                                            title="Имя папки сохранения связано с именем пакета">
-                                                    </button>
-                                                </span>
+                                                <button type="button" className={folderButtonClass} data-toggle="button"
+                                                        ref='folder_link_button'
+                                                        name='folder_link_button'
+                                                        onClick={this.onPackagePropertyChanged}
+                                                        id={this.create_id('follownamebutton')}
+                                                        data-toggle="tooltip" data-placement="top"
+                                                        title="Имя папки сохранения связано с именем пакета">
+                                                    <span className="glyphicon glyphicon-link"></span>
+                                                </button>
                                             </span>
                                             </label>
-                                        <span className="glyphicon glyphicon-link"></span>
                                         <input type="text"
                                                required="true"
                                                className="form-control"
@@ -526,7 +555,7 @@ var PackageEditorModal = React.createClass({
                                             value={this.state.work_info.password}></textarea>
                                     </div>
 
-                                    <LinksInputElement package={this.state.work_info}/>
+                                    <LinksInputElement ref='links_input' package={this.state.work_info}/>
                                 </div>
                                 <div className="ajaxFail"></div>
                                 <div className="modal-footer">

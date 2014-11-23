@@ -232,7 +232,8 @@ def edit_package():
         data = {
             "name": request.json[u"pack_name"],
             "folder": request.json[u"pack_folder"],
-            "password": request.json[u"pack_pws"]
+            "password": request.json[u"pack_pws"],
+            "links": request.json[u"pack_links"],
         }
 
         PYLOAD.setPackageData(id, data)

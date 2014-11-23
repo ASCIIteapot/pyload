@@ -17,7 +17,6 @@
     @author: mkaay
 """
 
-
 from threading import RLock
 from time import time
 
@@ -26,6 +25,7 @@ from module.PullEvents import InsertEvent, ReloadAllEvent, RemoveEvent, UpdateEv
 from module.PyPackage import PyPackage
 from module.PyFile import PyFile
 from module.database import style, DatabaseBackend
+
 
 try:
     from pysqlite2 import dbapi2 as sqlite3
@@ -130,6 +130,31 @@ class FileHandler:
 
         #@TODO change from reloadAll event to package update event
         self.core.pullManager.addEvent(ReloadAllEvent("collector"))
+
+    def setLinks(self, urls, pid):
+        """
+        Setting links for package (add, remove, move)
+        """
+        package = self.core.files.getPackageData(pid)
+        exist_links = package['links'].values()
+        def urls_extractor(item):
+            return item[0]
+        def exist_extractor(item):
+            return item['url']
+
+        new_url_only = map(urls_extractor, urls)
+        exist_url_only = map(exist_extractor, exist_links)
+        #TODO: make link order changes
+
+        # deleting
+        removed_links = [exist_link for exist_link in exist_links if exist_extractor(exist_link) not in new_url_only]
+        for removed in removed_links:
+            self.deleteLink(removed['id'])
+
+        # adding
+        new_links = [new_link for new_link in urls if urls_extractor(new_link) not in exist_url_only]
+        if any(new_links):
+            self.addLinks(map(urls_extractor, new_links), pid)
 
     #----------------------------------------------------------------------
     @lock

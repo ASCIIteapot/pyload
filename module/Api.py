@@ -18,15 +18,16 @@
 """
 
 from base64 import standard_b64encode
-from os.path import join
 from time import time
-import re
 
+from os.path import join
+import re
 from PyFile import PyFile
 from utils import freeSpace, compare_time
 from common.packagetools import parseNames
 from network.RequestFactory import getURL
 from remote import activated
+
 
 if activated:
     try:
@@ -730,8 +731,21 @@ class Api(Iface):
         if not p: raise PackageDoesNotExists(pid)
 
         for key, value in data.iteritems():
-            if key == "id": continue
+            if key == "id" or key == 'links': continue
             setattr(p, key, value)
+
+        # handle links
+        if 'links' in data:
+            parsed_urls = {}
+            for plugin, urls in self.checkURLs(data['links']).iteritems():
+                for url in urls:
+                    parsed_urls[url] = plugin
+
+            def select_predicate(link):
+                return link, parsed_urls[link]
+            # preserve order
+            pu1 = map(select_predicate, data['links'])
+            self.core.files.setLinks(pu1, p.id)
 
         p.sync()
         self.core.files.save()

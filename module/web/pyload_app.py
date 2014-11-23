@@ -17,26 +17,22 @@
     @author: RaNaN
 """
 from datetime import datetime
-from operator import itemgetter, attrgetter
-
+from operator import itemgetter
 import time
-import os
 import sys
-from os import listdir
-from os.path import isdir, isfile, join, abspath
 from sys import getfilesystemencoding
 from urllib import unquote
 
+import os
+from os import listdir
+from os.path import isdir, isfile, join, abspath
 from bottle import route, static_file, request, response, redirect, HTTPError, error
-
 from webinterface import PYLOAD, PYLOAD_DIR, PROJECT_DIR, SETUP, env
-
 from utils import render_to_response, parse_permissions, parse_userdata, \
     login_required, get_permission, set_permission, permlist, toDict, set_session
-
 from filters import relpath, unquotepath
-
 from module.utils import formatSize, save_join, fs_encode, fs_decode
+
 
 # Helper
 
@@ -173,21 +169,13 @@ def home():
 @route("/queue")
 @login_required("LIST")
 def queue():
-    queue = PYLOAD.getQueue()
-
-    queue.sort(key=attrgetter("order"))
-
-    return render_to_response('queue.html', {'content': queue, 'target': 1}, [pre_processor])
+    return render_to_response('queue.html', {'target': 'queue'}, [pre_processor])
 
 
 @route("/collector")
 @login_required('LIST')
 def collector():
-    queue = PYLOAD.getCollector()
-
-    queue.sort(key=attrgetter("order"))
-
-    return render_to_response('queue.html', {'content': queue, 'target': 0}, [pre_processor])
+    return render_to_response('queue.html', {'target': 'collector'}, [pre_processor])
 
 
 @route("/downloads")

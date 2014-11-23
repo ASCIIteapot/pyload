@@ -72,7 +72,7 @@ var LinksInputElement=React.createClass({
         var isNewFile = _.matches({isnew: true});
         var isDuplicateFile = _.matches({doubling: true});
         return {
-                overall : _.size(files),
+                overall : _.chain(files).filter(function(file){return !(file.removed && !file.restored);}).size(files).value(),
                 new_files : _.chain(files).
                             filter(isNewFile).
                             size().value(),
@@ -196,6 +196,7 @@ var LinksInputElement=React.createClass({
         this.setupParsedFiles([]);
     },
     enterFileEdit: function(file){
+        this.commitEditingFile();
         this.state.currentlyEditingFile = file;
         file.isediting=true;
         file.editinglink = file.url;
@@ -241,6 +242,10 @@ var LinksInputElement=React.createClass({
             this.forceUpdate();
         }
     },
+    commitAll: function(){
+        this.commitEditingFileImpl();
+        this.commitFilesImpl();
+    },
     discardEditingFile: function(){
         var file = this.state.currentlyEditingFile;
         if(file !== null){
@@ -270,7 +275,9 @@ var LinksInputElement=React.createClass({
         if(_.any(this.state.files)){
             var items=[];
 
-            $(this.state.files).each(function(index, file){
+            _.chain(this.state.files).
+                filter(function(file){return !(file.removed && !file.restored);}).
+                each(function(file, index){
                 var classes = cs({
                     isnew: file.isnew,
                     isdoubling: file.doubling,
@@ -320,9 +327,41 @@ var LinksInputElement=React.createClass({
                     var editLink=function(event){
                         this.enterFileEdit(file);
                     }.bind(this);
+
+                    var removeFileCommand = function(event){
+                        file.removed = true;
+                        this.updateCounters();
+                        this.commitFilesImpl();
+                        this.forceUpdate();
+                    }.bind(this);
+
+                    var fileControl=(<div className="btn-group" role="group">
+                                          <button type="button" className="btn btn-default" onClick={removeFileCommand}>
+                                              <span className='glyphicon glyphicon-remove'></span>
+                                          </button>
+                                    </div>);
+
+                    var nameData = function(){
+                        var nameObj=null;
+                        if(_.has(file, 'name') && file.name != file.url && file.name){
+                            nameObj =(<span className='withurl'>
+                                                <span className='name'>{file.name}</span>
+                                                <span>: </span>
+                                                <span className='url'>{file.url}</span>
+                                        </span>);
+                        }
+                        else{
+                            nameObj = <span>{file.url}</span>;
+                        }
+                        return (<div>
+                                    {nameObj}
+                                    {fileControl}
+                                </div>);
+                    }.bind(this);
+
                     item = (<tr key={file.url} className={classes} onDoubleClick={editLink}>
                                 <td>{index+1}</td>
-                                <td>{file.url}</td>
+                                <td>{nameData()}</td>
                                 <td>{file.plugin}</td>
                                 <td>{file.status}</td>
                               </tr>);
@@ -390,7 +429,7 @@ var LinksInputElement=React.createClass({
         /* Получение полного списка ссылок */
 
         return _.chain(this.state.existfiles).
-            filter(function(item){return (!item.removed) || item.restored;})
+            filter(function(item){return (!item.removed && !item.restored);})
             .pluck('url').value();
     }
 });
@@ -431,6 +470,7 @@ var PackageEditorModal = React.createClass({
     },
 
     commitPackageChanges: function(){
+        this.refs.links_input.commitAll();
         var packageData = {
             pack_id: this.state.work_info.pid,
             pack_name: this.state.work_info.name,

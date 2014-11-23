@@ -493,11 +493,11 @@ var PackageQueue = React.createClass({
         // формируем запросы
         var requests=[
             // список 'всех' пакетов в очереди/хранилеще
-            {url: '/json/packages', method: 'GET'},
+            {url: '/json/' + this.props.target +'/packages', method: 'GET'},
             // список активных закачек
             {url: '/json/links', method: 'GET'},
             // загрзука файлов для выбранных пакетов
-            {url: '/json/packages', method: 'POST', data:{pids: load_files}}
+            {url: '/json/' + this.props.target +'/packages', method: 'POST', data:{pids: load_files}}
         ];
 
         async.map(requests, ajaxCallFunction,

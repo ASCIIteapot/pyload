@@ -69,11 +69,24 @@ def links():
 
 @route("/json/packages", method="POST")  # FULL info for specifed packages
 @route("/json/packages")
+@route("/json/:dest/packages", method="POST")  # FULL info for specifed packages
+@route("/json/:dest/packages")
 @login_required('LIST')
-def packages():
+def packages(**kwargs):
+    if 'dest' in kwargs:
+        dest = kwargs['dest']
+    else:
+        dest = None
     try:
         def pkg_items():
-            for pid, pkg in ([pkg.pid, toDict(pkg)] for pkg in PYLOAD.getQueue()):
+            if dest is None or dest == 'queue':
+                packages = PYLOAD.getQueue()
+            elif dest == 'collector':
+                packages = PYLOAD.getCollector()
+            else:
+                raise Exception('Unknown dest: {}'.format(dest))
+
+            for pid, pkg in ([pkg.pid, toDict(pkg)] for pkg in packages):
                 if request.method == 'POST' and str(pid) in request.json[u'pids']:
                     # compliment links info
                     pkgdata = PYLOAD.getPackageData(pid)

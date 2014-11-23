@@ -13,6 +13,7 @@ var MenuItem = React.createClass({
     var classes = cx(this.props.classes);
     return (
         <li className={classes}
+            key={this.props.action}
             data-action={this.props.action}
             onClick={onActionClick}>
             <a href={this.props.link}
@@ -36,7 +37,7 @@ var DropdownMenuItem = React.createClass({
     });
 
     return (
-        <li className='dropdown' >
+        <li className='dropdown' key={this.props.action}>
             <a href='#' className="dropdown-toggle"
                 data-toggle="dropdown" data-replace-tmp-key="6be2458a7786d2dfdb6b72d7583e8104">
                 <div className="navbar-item">

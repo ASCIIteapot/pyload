@@ -69,3 +69,12 @@ td.editinglink > div > input{
 td.editinglink > div > div.btn-group{
     width: 10%;
 }
+
+/* установка серого цвета для файлов с именем */
+span.withurl{
+    color: #c0c0c0;
+}
+
+span.withurl .name{
+    color: #000000;
+}

@@ -77,6 +77,19 @@ def packages(**kwargs):
         dest = kwargs['dest']
     else:
         dest = None
+
+    def pakage_filter(pid):
+        return True
+
+    def check_for_full_info(pid):
+        json = request.json if request.method == 'POST' else None
+        if json is not None:
+            if bool(json.get(u'all_full_info', False)):
+                return True
+            elif pid in (int(jpid) for jpid in json.get(u'pids', [])):
+                return True
+        return False
+
     try:
         def pkg_items():
             if dest is None or dest == 'queue':
@@ -86,20 +99,19 @@ def packages(**kwargs):
             else:
                 raise Exception('Unknown dest: {}'.format(dest))
 
-            for pid, pkg in ([pkg.pid, toDict(pkg)] for pkg in packages):
-                if request.method == 'POST' and str(pid) in request.json[u'pids']:
+            for pid, pkg in ([pkg.pid, toDict(pkg)] for pkg in packages if pakage_filter(pkg.pid)):
+                if check_for_full_info(pid):
                     # compliment links info
                     pkgdata = PYLOAD.getPackageData(pid)
                     # TODO consider to make toDict() reqursive
-                    pkgdict = toDict(pkgdata)
-                    pkgdict['links'] = [toDict(fileobj) for fileobj in pkgdict['links']]
+                    pkg['links'] = [toDict(fileobj) for fileobj in pkgdata.links]
 
                     # normolize status msg
-                    for link in pkgdict['links']:
+                    for link in pkg['links']:
                         link['status'] = _invert_pyfile_status_map[link['status']]
 
-                    yield pid, pkgdict
-                elif request.method == 'GET':
+                    yield pid, pkg
+                else:
                     del pkg['links']
                     yield pid, pkg
 

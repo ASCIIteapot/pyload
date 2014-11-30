@@ -1,1 +1,32 @@
 {% extends 'madness/base.html' %}
+
+{% block title %}{% endblock %}
+{% block subtitle %}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script type="text/jsx" src="/media/madness/js/queue/queue-logic.js"></script>
+<script type="text/jsx" src="/media/madness/js/queue/queue.jsx.js"></script>
+
+<style type="text/css">
+/* TODO: переместить в подходящий стилевой файл */
+.main-container{
+    /* Fallback for web browsers that doesn't support RGBa */
+	background: rgb(255, 255, 255);
+	/* RGBa with 0.6 opacity */
+	background: rgba(255, 255, 255, 0.5);
+}
+</style>
+{% endblock %}
+
+{% block container_content %}
+<div id="queue-view"></div>
+
+<script type="text/jsx">
+/** @jsx React.DOM */
+React.renderComponent(<PackageQueue pollInterval={2000}
+        target="home"/> ,
+        $('#queue-view').get(0));
+</script>
+
+{% endblock %}

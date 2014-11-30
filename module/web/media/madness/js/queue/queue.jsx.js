@@ -5,27 +5,50 @@
 
 var cs=React.addons.classSet;
 
+var super_status_map = {
+                'super-finished': ["finished"],
+                'super-queue': ['queued'],
+                'super-error' : ['offline', 'aborted', 'failed', 'temp. offline'],
+                'super-waiting': ['waiting'],
+                'super-neutral': ['skipped', 'online', 'unknown'],
+                'super-processing': ['custom', 'processing', 'downloading', 'starting', 'decrypting']
+            };
+
+var getSuperStatus = function(status){
+            return _.chain(super_status_map).pairs().
+                find(function(item){
+                    return _.contains(item[1], status);
+                }).value()[0];
+        };
+
 var package_control_items=[
     {
         id: 'edit',
         name: 'edit',                           // l18n
         description: 'editing package info',    // l18n
-        icon: '/media/madness/img/edit.svg',
+        icon: 'glyphicon glyphicon-pencil',
         action: 'edit_package'
     },
     {
         id: 'add',
         name: 'add',                                    // l18n
         description: 'Add new download in package',    // l18n
-        icon: '/media/madness/img/download61.svg',
+        icon: 'glyphicon glyphicon-plus',
         action: 'add_download'
     },
     {
         id: 'unpack',
         name: 'unpack',                                    // l18n
         description: 'Unpack archives in package',    // l18n
-        icon: '/media/madness/img/box41.svg',
+        icon: 'glyphicon glyphicon-log-out',
         action: 'unpack'
+    },
+    {
+        id: 'move',
+        name: 'move',                                    // l18n
+        description: 'Перемещение пакета',    // l18n
+        icon: 'glyphicon glyphicon-export',
+        action: 'move_package'
     }
     ];
 
@@ -34,26 +57,26 @@ var package_control_items=[
         id: 'restart_all',
         name: 'restart all',                                    // l18n
         description: 'Force restart all files in package',    // l18n
-        icon: '/media/madness/img/reload3.svg',
+        icon: 'glyphicon glyphicon-repeat',
         action: 'restart_all'
     },
     {
         id: 'restart_errors',
         name: 'restart errors',                                    // l18n
         description: 'Force restart only error files in package',    // l18n
-        icon: '/media/madness/img/reload3.svg',
+        icon: 'glyphicon glyphicon-repeat',
         action: 'restart_errors'
     },
     {
         id: 'restart_errors_and_wait',
         name: 'restart errors and wait',                                    // l18n
         description: 'Force restart error and wait files in package',    // l18n
-        icon: '/media/madness/img/reload3.svg',
+        icon: 'glyphicon glyphicon-repeat',
         action: 'restart_errors_and_wait'
     }
 ];
 
-function mapControlItem(pid){
+function mapControlItem(package_item){
 
     var classes = {
         'btn': true,
@@ -63,13 +86,15 @@ function mapControlItem(pid){
     return function(val, index){
         classes[val.action]=true;
 
+        var on_click_function = function(event){
+            onPackageActionClick(val.action, package_item);
+        };
+
         return (<button type="button" className={cs(classes)}
-                           data-action={val.action}
-                           data-pid={pid}
                            key={val.id}
-                           onClick={onPackageActionClick}
+                           onClick={on_click_function}
                            rel="tooltip" data-toggle="tooltip" data-placement="bottom" title={val.description}>
-                    <img src={val.icon} alt={val.name}></img>
+                    <span className={val.icon}></span>
                 </button>)
     }
 }
@@ -89,11 +114,16 @@ var Package = React.createClass({
     getInitialState: function() {
         return {
             show_details: false,
-            show_files: false,
+            show_files: this.props.ishome,
             folder_follow_name: true,
             show_package_save: false,
             details: this.props.get_state
         };
+    },
+    componentWillMount: function(){
+        if(this.state.show_files){
+            this.props.lookupFiles(true);
+        }
     },
     onToggleShowState: function(event){
         var button = $(event.target);
@@ -139,28 +169,22 @@ var Package = React.createClass({
     },
     get_files_vdom : function(){
         var state = this.state;
-        var files_elements = state.details().links.map(function(file, index){
-            var links_class={};
-            links_class[file.status] = true;
+        var filesFilter = function(item){
+            return this.props.filesFilter(item.file);
+        }.bind(this);
+        var files_elements = _.chain(state.details().links).
+                            // сохраняем исходные индексы
+                            map(function(item, index){return {file: item, index: index};}).
+                filter(filesFilter).map(function(item){
+                var file = item.file;
+                var index = item.index + 1;
+                var links_class={};
+                links_class[file.status] = true;
 
-            var super_status_map = {
-                'super-finished': ["finished"],
-                'super-queue': ['queued'],
-                'super-error' : ['offline', 'aborted', 'failed', 'temp. offline'],
-                'super-waiting': ['waiting'],
-                'super-neutral': ['skipped', 'online', 'unknown'],
-                'super-processing': ['custom', 'processing', 'downloading', 'starting', 'decrypting']
-            };
+
 
             // setup super status
-            var super_setted = null;
-            for(super_item in super_status_map){
-                if(super_status_map[super_item].indexOf(file.status)>-1){
-                   links_class[super_item] = true;
-                   super_setted = super_item;
-                   break;
-                }
-            }
+            var super_setted = getSuperStatus(file.status);
 
             var status_icon_map={
                 'super-finished': 'status-icon glyphicon glyphicon-ok',
@@ -169,7 +193,7 @@ var Package = React.createClass({
                 'super-waiting': 'status-icon glyphicon glyphicon-time',
                 'super-processing': 'status-icon glyphicon glyphicon-forward'
             };
-
+            links_class[super_setted] = true;
             var status_icon = (<span className={status_icon_map[super_setted]}></span>);
 
 
@@ -266,15 +290,18 @@ var Package = React.createClass({
                         </table>
                      </div>);
     },
+    get_package_controls_vfom:function(){
+        /* <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.props.pid))}</div> */
+        return <div className='package-control btn-toolbar aux-info'>
+                    <div className='btn-group package-primary'>{package_control_items.map(mapControlItem(this.state.details()))}</div>
+                </div>;
+    },
     get_package_base_info_vdom : function(){
         var links_progress = Math.round((this.state.details().linksdone / this.state.details().linkstotal)*100);
         return (<div className='base-info'>
             <div className='name-rel horisontal-spaced-container'>
                 <span className='name oneline-ellipsis'>{this.state.details().name}</span>
-                <div className='package-control btn-toolbar aux-info'>
-                    <div className='btn-group package-primary'>{package_control_items.map(mapControlItem(this.props.pid))}</div>
-                    <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.props.pid))}</div>
-                </div>
+                {this.get_package_controls_vfom()}
             </div>
 
             <div className="progress-info">
@@ -482,54 +509,52 @@ var PackageQueue = React.createClass({
         };
 
         // получаем список пакетов для которых должны быть загружена информация о файлах
-        var load_files=[];
-        for(pid in this.state){
-            if(this.state[pid].load_files){
-                load_files.push(pid);
-            }
-        }
-        // console.log('load_files', load_files);
 
         // формируем запросы
+        var pakage_request_data = null;
+        var packageSource = 'queue';
+        if(this.props.target == 'home'){
+            pakage_request_data = {all_full_info: true};
+        }
+        else{
+            packageSource = this.props.target;
+            var loadfilter = _.matches({load_files: true});
+            var loadf= _.chain(this.state).values().filter(loadfilter).pluck('pid').value();
+            pakage_request_data = {pids: loadf};
+        }
+
         var requests=[
-            // список 'всех' пакетов в очереди/хранилеще
-            {url: '/json/' + this.props.target +'/packages', method: 'GET'},
             // список активных закачек
             {url: '/json/links', method: 'GET'},
             // загрзука файлов для выбранных пакетов
-            {url: '/json/' + this.props.target +'/packages', method: 'POST', data:{pids: load_files}}
+            {url: '/json/' + packageSource +'/packages', method: 'POST', data: pakage_request_data}
         ];
 
         async.map(requests, ajaxCallFunction,
             function(err, results){
                 // выполняем комплиментацию результатов
-                // console.log(results);
-                // console.log(err);
-                var packages = results[0];
+                var packages = results[1];
 
                 // добавляем информацию о файлах
-                for(pid in results[2]){
-                    packages[pid].links=results[2][pid].links;
+                for(pid in packages){
                     packages[pid].load_files=true;
                 }
 
-                results[1]['links'].forEach(function(link, index){
+                results[0]['links'].forEach(function(link, index){
                     var package_ = packages[link.packageID];
                     if('links' in package_){
                         var file_ = _.find(package_.links, function(item){return item.fid == link.fid});
                         file_['status-data'] = link;
                     }
                 });
-
-                this.setState(packages);
+                console.log('load ', _.size(packages));
+                this.replaceState(packages);
             }.bind(this));
     },
     getPackageState: function(pid){
         // получение информации для указнного пакета
         return this.state[pid];
-        this.forceUpdate();
     },
-
     /**
      * @pid: package id
      * @enable: enables lookup for files change. If enabled then files info fetched from server via /json/package/<id> and call forceUpdate when necessary/
@@ -538,10 +563,29 @@ var PackageQueue = React.createClass({
         this.state[pid].load_files = enable;
         this.loadPackagesFromServer();
     },
+    filesFilter: function(file){
+        /* Фильтр файлов */
+        var allowed_home_supers=['super-processing', 'super-waiting', 'super-error', 'super-queue'];
+
+        if(this.props.target == 'home'){
+            var superStatus = getSuperStatus(file.status);
+            return _.contains(allowed_home_supers, superStatus);
+        }
+        else{return true;}
+    },
     render: function(){
-        var l18n = this.props.l18n;
-        var state = this.state;
-        var packages = Object.keys(state).map(function(pid, index) {
+        var l18n = {};
+        var packageFilter = function(p){
+            if(this.props.target == 'home'){
+                return _.chain(p.links).any(this.filesFilter).value();
+            }
+            else{
+                return true;
+            }
+        }.bind(this);
+        var packages = _.chain(this.state).values().filter(packageFilter).
+                           map(function(p){
+                           var pid = p.pid;
                            var get_state_func=function(){
                                return this.getPackageState(pid)
                            }.bind(this);
@@ -550,13 +594,16 @@ var PackageQueue = React.createClass({
                            }.bind(this);
 
                            return (<Package ref={'p_'+pid}
+                                            key={'pack_' +pid}
                                             pid={pid}
                                             l18n={l18n}
+                                            ishome={this.props.target == 'home'}
+                                            filesFilter={this.filesFilter}
                                             get_state={get_state_func}
                                             lookupFiles={lookup_files}
                                             />);
-        }.bind(this));
-
+        }.bind(this)).value();
+        console.log(_.size(this.state), _.size(packages));
         return (<div className="pyload-package-collection">
                     {packages}
                 </div>);

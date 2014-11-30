@@ -112,7 +112,7 @@
 
 /* Показ кнопок отображения файлов и деталей пакета по наведению указателя мыши на пакет */
 .pyload-package:not(:hover) .package-view-control-outer{
-    /*display: none;*/
+    display: none;
 }
 
 /*
@@ -257,7 +257,7 @@
 
 .package-control .btn-group > .btn:not(:last-child),
 .pyload-package .files .info-data .btn-group > .btn:not(:last-child){
-    margin-right: 5px;
+    margin-right: 2px;
 }
 
 .package-control .btn-group > .btn.btn-default,

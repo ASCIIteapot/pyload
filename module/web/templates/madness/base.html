@@ -6,6 +6,7 @@
 
 <link href="/media/madness/css/package.css" rel="stylesheet">
 <link href="/media/madness/css/package-files.css" rel="stylesheet">
+<link href="/media/madness/css/text_withbuttons.css" rel="stylesheet">
 
 
 <script src="/media/madness/vendor/react-0.11.0/react-with-addons.js"></script>
@@ -26,7 +27,9 @@
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container main-container" id="body-container">
     <div id="actions-control"></div>
+    {% block header%}
     <h1 class="page-header">{% block subtitle %}pyLoad - {{_("Webinterface")}}{% endblock %}</h1>
+    {% endblock %}
 
     {% block container_content %}
     {% endblock %}

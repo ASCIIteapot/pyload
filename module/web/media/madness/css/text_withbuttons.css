@@ -1,0 +1,47 @@
+.text_wbuttons{
+    display: flex;
+}
+
+.one-line-ellipsis,
+.text_wbuttons > div.text{
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    /* background: #fc0;*/
+}
+
+/* для таблиц */
+.table td.text_wbuttons_td{
+    padding: 0px;
+}
+
+.table td > .text_wbuttons > div.text{
+    padding: 8px;
+}
+
+.table.table-condensed td > .text_wbuttons > div.text{
+    padding: 5px;
+}
+
+/*----------------*/
+
+.text_wbuttons.align_right  > div.text{
+    flex-grow: 1;
+}
+
+.text_wbuttons > .btn-group,
+.text_wbuttons > div.btn-toolbar .btn-group,
+.text_wbuttons > div.btn-toolbar{
+    display: inline-flex;
+    flex-wrap: nowrap;
+}
+
+.text_wbuttons .btn-group{
+    border-bottom: 2px solid lightblue;
+}
+
+.text_wbuttons .btn{
+    /*background: WhiteSmoke;*/
+    border-width: 0px;
+    border-radius: 0px;
+}

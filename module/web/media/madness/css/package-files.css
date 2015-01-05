@@ -3,21 +3,21 @@
 */
 
 
+.pyload-package > .files{
+    min-height: 50px;
+    table-layout: fixed;
+}
+
 /* установка жёстких размеров колонок и элементах в них*/
-.pyload-package .files tr td:nth-child(1){
+.pyload-package .files col.id{
     width: 45px;
 }
 
-.pyload-package .files tr td:nth-child(2){
+.pyload-package .files col.name{
     width: 400px;
 }
 
-.pyload-package .files tr td:nth-child(3){
-    width: 100px;
-}
-
-/*.pyload-package .files .info-data > div{*/
-.pyload-package .files tr td:nth-child(6){
+.pyload-package .files col.column-info{
     width: 350px;
 }
 
@@ -25,10 +25,6 @@
     display: inline-flex;
 }
 
-.pyload-package > .files{
-    min-height: 50px;
-    table-layout: fixed;
-}
 
 
 /*сокрытие*/
@@ -64,10 +60,6 @@ td.editinglink > div{
 
 td.editinglink > div > input{
     width: 100%;
-}
-
-td.editinglink > div > div.btn-group{
-    width: 10%;
 }
 
 /* установка серого цвета для файлов с именем */

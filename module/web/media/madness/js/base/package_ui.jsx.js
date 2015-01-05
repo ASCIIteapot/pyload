@@ -308,9 +308,9 @@ var LinksInputElement=React.createClass({
                     }.bind(this);
                     item = (<tr key={file.url} className={classes} onKeyPress={keyPressed}>
                                 <td>{index+1}</td>
-                                <td className='editinglink' colSpan='3'>
-                                    <div>
-                                        <input value={file.editinglink} onChange={onChanged}/>
+                                <td className='editinglink text_wbuttons_td' colSpan='3'>
+                                    <div className='text_wbuttons align_right'>
+                                        <input className='text' value={file.editinglink} onChange={onChanged}/>
                                         <div className="btn-group" role="group">
                                           <button type="button" className="btn btn-primary" onClick={accept}>
                                               <span className='glyphicon glyphicon-ok'></span>
@@ -344,16 +344,16 @@ var LinksInputElement=React.createClass({
                     var nameData = function(){
                         var nameObj=null;
                         if(_.has(file, 'name') && file.name != file.url && file.name){
-                            nameObj =(<span className='withurl'>
+                            nameObj =(<div className='withurl text'>
                                                 <span className='name'>{file.name}</span>
                                                 <span>: </span>
                                                 <span className='url'>{file.url}</span>
-                                        </span>);
+                                        </div>);
                         }
                         else{
-                            nameObj = <span>{file.url}</span>;
+                            nameObj = <div className='text'>{file.url}</div>;
                         }
-                        return (<div>
+                        return (<div className='text_wbuttons align_right'>
                                     {nameObj}
                                     {fileControl}
                                 </div>);
@@ -361,7 +361,7 @@ var LinksInputElement=React.createClass({
 
                     item = (<tr key={file.url} className={classes} onDoubleClick={editLink}>
                                 <td>{index+1}</td>
-                                <td>{nameData()}</td>
+                                <td className='text_wbuttons_td'>{nameData()}</td>
                                 <td>{file.plugin}</td>
                                 <td>{file.status}</td>
                               </tr>);

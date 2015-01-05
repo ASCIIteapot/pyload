@@ -29,20 +29,20 @@ var package_control_items=[
         icon: 'glyphicon glyphicon-pencil',
         action: 'edit_package'
     },
-    {
-        id: 'add',
-        name: 'add',                                    // l18n
-        description: 'Add new download in package',    // l18n
-        icon: 'glyphicon glyphicon-plus',
-        action: 'add_download'
-    },
-    {
-        id: 'unpack',
-        name: 'unpack',                                    // l18n
-        description: 'Unpack archives in package',    // l18n
-        icon: 'glyphicon glyphicon-log-out',
-        action: 'unpack'
-    },
+//    {
+//        id: 'add',
+//        name: 'add',                                    // l18n
+//        description: 'Add new download in package',    // l18n
+//        icon: 'glyphicon glyphicon-plus',
+//        action: 'add_download'
+//    },
+//    {
+//        id: 'unpack',
+//        name: 'unpack',                                    // l18n
+//        description: 'Unpack archives in package',    // l18n
+//        icon: 'glyphicon glyphicon-log-out',
+//        action: 'unpack'
+//    },
     {
         id: 'move',
         name: 'move',                                    // l18n
@@ -234,14 +234,14 @@ var Package = React.createClass({
             return (<tr className={cs(links_class)}>
                        <td>{index}</td>
                        <td>
-                           <span className='oneline-ellipsis'>
+                           <div className='one-line-ellipsis'>
                                  {file.name}
-                           </span>
+                           </div>
                        </td>
                        <td>
-                           <span className='oneline-ellipsis'>
+                           <div className='one-line-ellipsis'>
                                 {file.plugin}
-                           </span>
+                           </div>
                        </td>
                        <td>
                             <span className='status-data'>
@@ -250,9 +250,9 @@ var Package = React.createClass({
                             </span>
                        </td>
                        {file.size ? size : <td></td> }
-                       <td className='info-data'>
-                           <div>
-                               <span className='info-text oneline-ellipsis'>{file_info()}</span>
+                       <td className='info-data text_wbuttons_td'>
+                           <div className='text_wbuttons align_right'>
+                               <div className='text'>{file_info()}</div>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
                                         onClick={restart_file}>
@@ -268,27 +268,27 @@ var Package = React.createClass({
                     </tr>);
         }.bind(this));
 
-        return (<div className='files'>
-                        <table className="table table-hover">
-                            <col/>
-                            <col className='column-name'/>
-                            <col/>
-                            <col/>
-                            <col/>
-                            <col className='column-info'/>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Имя</th>
-                                    <th>Плагин</th>
-                                    <th>Статус</th>
-                                    <th>Размер</th>
-                                    <th>Информация</th>
-                                </tr>
-                            </thead>
-                            <tbody>{files_elements}</tbody>
-                        </table>
-                     </div>);
+        return (<table className="table table-hover files">
+                    <colgroup>
+                        <col className='id'/>
+                        <col className='name'/>
+                        <col/>
+                        <col/>
+                        <col/>
+                        <col className='column-info'/>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Имя</th>
+                            <th>Плагин</th>
+                            <th>Статус</th>
+                            <th>Размер</th>
+                            <th>Информация</th>
+                        </tr>
+                    </thead>
+                    <tbody>{files_elements}</tbody>
+                </table>);
     },
     get_package_controls_vfom:function(){
         /* <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.props.pid))}</div> */
@@ -299,8 +299,8 @@ var Package = React.createClass({
     get_package_base_info_vdom : function(){
         var links_progress = Math.round((this.state.details().linksdone / this.state.details().linkstotal)*100);
         return (<div className='base-info'>
-            <div className='name-rel horisontal-spaced-container'>
-                <span className='name oneline-ellipsis'>{this.state.details().name}</span>
+            <div className='name-rel text_wbuttons'>
+                <div className='name text'>{this.state.details().name}</div>
                 {this.get_package_controls_vfom()}
             </div>
 

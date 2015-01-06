@@ -116,6 +116,40 @@ function toHuman(size_in_bytes){
     });
 }
 
+var _markupMatch = _.matches({make_markup:true});
+var _speedMatch = _.matches({isspeed:true});
+
+function formatWaiting(args_dict){
+    // time in ms
+    // make markap
+}
+
+function formatSize(args_dict){
+    var speed = toHuman(args_dict.value);
+    var isspeed = _speedMatch(args_dict);
+    if(_markupMatch(args_dict)){
+        var classes = {'with-units': true};
+        if(_.has(args_dict, 'classes')){
+            _.each(args_dict.classes, function(classItem){classes[classItem] = true;});
+        }
+
+        return <span className={cs(classes)}>
+                    <span className='value'>{speed.size}</span>
+                    <span className='units'>{speed.units} {isspeed ? "/s": null}</span>
+                </span>;
+    }
+    else{
+        return speed;
+    }
+}
+
+function formatPercent(args_dict){
+    return <span className='progress-proc with-units'>
+            <span className='value'>{args_dict.percent}</span>
+            <span className='units'>%</span>
+         </span>
+}
+
 var Package = React.createClass({
 
     getInitialState: function() {
@@ -210,7 +244,7 @@ var Package = React.createClass({
             var status_icon = (<span className={status_icon_map[super_setted]}></span>);
 
 
-            var size = <td>{toHuman(file.size).size}<span className='units'>{toHuman(file.size).units}</span></td>;
+            var size = formatSize({value: file.size, make_markup: true});
 
             var restart_file = function(){this.restart_file_command(file)}.bind(this);
             var abort_file = function(){this.abort_file_command(file)}.bind(this);
@@ -220,25 +254,34 @@ var Package = React.createClass({
                 if('status-data' in file){
                     var stdata = file['status-data'];
 
-                    var items = [];
-                    if(super_setted == 'super-processing' &&  stdata.percent){
-                        items[items.length]=<span className='progress-proc with-units'>
-                                                <span className='value'>{stdata.percent}</span>
-                                                <span className='units'>%</span>
-                                             </span>;
+                    if(super_setted == 'super-processing'){
+                        var items = [];
+                        if(stdata.percent){
+                            items.push(formatPercent({
+                                percent: stdata.percent
+                            }));
+                        }
+
+                        var speed = formatSize({
+                                value: stdata.speed,
+                                make_markup: true,
+                                isspeed: true
+                        });
+                        items.push(<span>
+                            <span className='eta'>{stdata.format_eta}</span>
+                            <span className='delimiter'>@</span>
+                            {speed}
+                         </span>);
+
+                        return items;
                     }
-
-                    var speed = toHuman(stdata.speed);
-                    items[items.length]=(<span>
-                                            <span className='eta'>{stdata.format_eta}</span>
-                                            <span className='delimiter'>@</span>
-                                            <span className='with-units'>
-                                                <span className='value'>{speed.size}</span>
-                                                <span className='units'>{speed.units}/s</span>
-                                            </span>
-                                         </span>);
-
-                    return items;
+                    else if (super_setted == 'super-waiting'){
+                        var tmarkup = formatWaiting({
+                            time:stdata.wait_until,
+                            make_markup: true
+                        });
+                        return <span>{tmarkup}</span>
+                    }
                 }
                 else{
                     return <span title={file.error}>{file.error}</span>;
@@ -263,7 +306,7 @@ var Package = React.createClass({
                                 {file.statusmsg}
                             </span>
                        </td>
-                       {file.size ? size : <td></td> }
+                       <td>{file.size ? size : null}</td>
                        <td className='info-data text_wbuttons_td'>
                            <div className='text_wbuttons align_right'>
                                <div className='text'>{file_info()}</div>
@@ -319,6 +362,17 @@ var Package = React.createClass({
     },
     get_package_base_info_vdom : function(){
         var links_progress = Math.round((this.state.details().linksdone / this.state.details().linkstotal)*100);
+
+        var sizeDone = formatSize({
+            value: this.state.details().sizedone,
+            make_markup: true,
+            classes: ['done']
+        });
+        var sizeTotal = formatSize({
+            value: this.state.details().sizetotal,
+            make_markup: true,
+            classes: ['total']
+        });
         return (<div className='base-info'>
             <div className='name-rel text_wbuttons'>
                 <div className='name text'>{this.state.details().name}</div>
@@ -328,15 +382,9 @@ var Package = React.createClass({
             <div className="progress-info">
                 <div className='progress-quant'>
                     <div className='size'>
-                        <span className='done'>
-                            <span className='value'>{toHuman(this.state.details().sizedone).size}</span>
-                                                    {toHuman(this.state.details().sizedone).units}
-                        </span>
+                        {sizeDone}
                         <span className='delimiter'>/</span>
-                        <span className='total'>
-                            <span className='value'>{toHuman(this.state.details().sizetotal).size}</span>
-                                                    {toHuman(this.state.details().sizetotal).units}
-                        </span>
+                        {sizeTotal}
                     </div>
 
                     <div className='links'>

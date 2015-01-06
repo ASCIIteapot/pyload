@@ -63,10 +63,10 @@ td.editinglink > div > input{
 }
 
 /* установка серого цвета для файлов с именем */
-span.withurl{
+.withurl{
     color: #c0c0c0;
 }
 
-span.withurl .name{
+.withurl .name{
     color: #000000;
 }

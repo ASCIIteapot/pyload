@@ -312,11 +312,15 @@ var LinksInputElement=React.createClass({
                                     <div className='text_wbuttons align_right'>
                                         <input className='text' value={file.editinglink} onChange={onChanged}/>
                                         <div className="btn-group" role="group">
-                                          <button type="button" className="btn btn-primary" onClick={accept}>
-                                              <span className='glyphicon glyphicon-ok'></span>
+                                          <button type="button" className="btn btn-primary"
+                                              title='Принять изменения'
+                                                onClick={accept}>
+                                              <span className='glyphicon glyphicon-ok accept'></span>
                                           </button>
-                                          <button type="button" className="btn btn-default" onClick={discard}>
-                                              <span className='glyphicon glyphicon-remove'></span>
+                                          <button type="button" className="btn btn-default"
+                                                title='Отменить изменения'
+                                                onClick={discard}>
+                                              <span className='glyphicon glyphicon-remove remove'></span>
                                           </button>
                                         </div>
                                     </div>
@@ -336,8 +340,9 @@ var LinksInputElement=React.createClass({
                     }.bind(this);
 
                     var fileControl=(<div className="btn-group" role="group">
-                                          <button type="button" className="btn btn-default" onClick={removeFileCommand}>
-                                              <span className='glyphicon glyphicon-remove'></span>
+                                          <button type="button" className="btn btn-default" onClick={removeFileCommand}
+                                          title='Удалить файл'>
+                                              <span className='glyphicon glyphicon-remove remove'></span>
                                           </button>
                                     </div>);
 
@@ -372,16 +377,20 @@ var LinksInputElement=React.createClass({
 
             var addedItemsPresent = _.any(this.state.files, function(item){ return item.isnew || item.doubling;});
             var addItemsControl = (<div className='form-group horisontal-spaced-container'>
-                                        <button type="button" className="btn btn-default" onClick={this.resetLinksText}>
+                                        <button type="button" className="btn btn-default"
+                                            title='Очистить список введённых ссылок'
+                                        onClick={this.resetLinksText}>
                                             <span>
-                                                <span className='glyphicon glyphicon-remove-circle'></span>
+                                                <span className='glyphicon glyphicon-remove-circle remove'></span>
                                                 <span> </span>
                                                 <span>Очистить</span>
                                             </span>
                                         </button>
-                                        <button type="button" className="btn btn-success" onClick={this.commitLinksText}>
+                                        <button
+                                            title='Добавить разобранные ссылки'
+                                        type="button" className="btn btn-success" onClick={this.commitLinksText}>
                                             <span>
-                                                <span className='glyphicon glyphicon-plus'></span>
+                                                <span className='glyphicon glyphicon-plus add'></span>
                                                 <span> </span>
                                                 <span>Добавить</span>
                                             </span>

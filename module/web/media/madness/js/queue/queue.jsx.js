@@ -49,6 +49,13 @@ var package_control_items=[
         description: 'Перемещение пакета',    // l18n
         icon: 'glyphicon glyphicon-export',
         action: 'move_package'
+    },
+    {
+        id: 'remove',
+        name: 'remove',                                    // l18n
+        description: 'Удаление пакета',    // l18n
+        icon: 'glyphicon glyphicon-remove remove',
+        action: 'remove_package'
     }
     ];
 
@@ -167,6 +174,12 @@ var Package = React.createClass({
             data: { files_list: [file.fid]}
         }, 'Остановка файла '+file.url);
     },
+    remove_file_command: function(file){
+//        DoAjaxJsonRequest({
+//            url: '/json/abort_files',
+//            data: { files_list: [file.fid]}
+//        }, 'Остановка файла '+file.url);
+    },
     get_files_vdom : function(){
         var state = this.state;
         var filesFilter = function(item){
@@ -201,6 +214,7 @@ var Package = React.createClass({
 
             var restart_file = function(){this.restart_file_command(file)}.bind(this);
             var abort_file = function(){this.abort_file_command(file)}.bind(this);
+            var remove_file = function(){this.remove_file_command(file)}.bind(this);
 
             var file_info = function(){
                 if('status-data' in file){
@@ -255,12 +269,19 @@ var Package = React.createClass({
                                <div className='text'>{file_info()}</div>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
+                                      title='Перезапуск файла'
                                         onClick={restart_file}>
-                                      <span className='glyphicon glyphicon-refresh'></span>
+                                      <span className='glyphicon glyphicon-refresh refresh'></span>
                                   </button>
-                                  <button type="button" className="btn btn-default"
+                                  <button type="button" className="btn btn-default abort"
+                                        title='Остановка файла'
                                         onClick={abort_file}>
-                                      <span className='glyphicon glyphicon-ban-circle'></span>
+                                      <span className='glyphicon glyphicon-ban-circle remove'></span>
+                                  </button>
+                                  <button type="button" className="btn btn-default abort"
+                                        title='Удаление файла'
+                                        onClick={remove_file}>
+                                      <span className='glyphicon glyphicon-remove remove'></span>
                                   </button>
                                 </div>
                            </div>

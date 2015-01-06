@@ -119,3 +119,16 @@ ul.controls-group li{
 .horisontal-spaced-container > *:last-child{
     margin-right: 0px;
 }
+
+/* глифы */
+.glyphicon.remove{
+    color: red;
+}
+
+.glyphicon.accept{
+    color: greenyellow;
+}
+
+.glyphicon.refresh{
+    color: dodgerblue;
+}

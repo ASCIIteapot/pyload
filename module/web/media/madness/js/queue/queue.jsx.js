@@ -464,7 +464,7 @@ var Package = React.createClass({
                 <div className='horisontal-spaced-container progress-bar-item'>
                     {progressFiles}
                     <div className="progress">
-                        <div className="progress-bar" role="progressbar"
+                        <div className="progress-bar progress-bar-success" role="progressbar"
                         aria-valuenow={links_progress}
                         style={{width: links_progress+'%'}}
                         aria-valuemin="0" aria-valuemax="100">
@@ -617,7 +617,30 @@ var Package = React.createClass({
                                 </div>
                             </div>;
 
-        return (<div className="pyload-package">
+        var package_classes = {
+            'pyload-package': true
+        };
+        var state = this.state.details();
+        if(state.linkstotal == state.linksdone && state.linkstotal>0){
+            package_classes['done'] = true;
+        }
+        else{
+            var links = _.chain(state.links)
+                .pluck('status')
+                .map(getSuperStatus);
+
+            if(links.contains('super-processing').value()){
+                package_classes['super-processing']=true;
+            }
+            else if(links.contains('super-waiting').value()){
+                package_classes['super-waiting']=true;
+            }
+            else if(links.contains('super-error').value()){
+                package_classes['super-error']=true;
+            }
+        }
+
+        return (<div className={cs(package_classes)}>
                     {view_control}
                     <div className="header">
                         {this.get_package_base_info_vdom()}

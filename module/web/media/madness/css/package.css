@@ -73,6 +73,25 @@
 }
 /*------------------*/
 
+/*  начало ... индикация активного статуса для всего пакета в целом */
+.pyload-package.done{
+    background: #F2FFE8;
+}
+
+.pyload-package.super-processing{
+    background: #E3EBF4;
+}
+
+.pyload-package.super-waiting{
+    background: #F3EEE2;
+}
+
+/*.pyload-package.super-error{*/
+    /*background: #F0E5DF;*/
+/*}*/
+
+/*  конец ... индикация активного статуса для всего пакета в целом */
+
 .pyload-package .value{
     color: #000000;
 }

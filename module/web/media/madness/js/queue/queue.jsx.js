@@ -373,6 +373,70 @@ var Package = React.createClass({
             make_markup: true,
             classes: ['total']
         });
+
+
+        var errorFiles = null;
+        var progressFiles = null;
+
+        var links = this.state.details().links;
+        if(_.isArray(links)){
+            // errors
+            var errCount = _.chain(links)
+                .filter(function(item, index, list){
+                    return getSuperStatus(item.status) == 'super-error';
+                })
+                .size()
+                .value();
+            if(errCount > 0){
+                errorFiles = <span className='stat-count error-item'>
+                                <span className='glyphicon glyphicon-warning-sign error'></span>
+                                <span className='count'>{errCount}</span>
+                             </span>;
+            }
+
+            // progress
+            var progressItems = _.chain(links)
+                .filter(function(item, index, list){
+                    return getSuperStatus(item.status) == 'super-processing';
+                });
+
+
+
+            var processCount = progressItems.size().value();
+
+            var get_speed = function(){
+                var speed_items = _.chain(links)
+                    .filter(function(item, index, list){
+                        return item.status == 'downloading';
+                    })
+                    .pluck('status-data')
+                    .pluck('speed');
+                if(speed_items.size().value()==0){
+                    return null;
+                }
+
+                var overallspeed = speed_items
+                    .reduce(function(memo, num){ return memo + num; }, 0)
+                    .value();
+                return formatSize({
+                    value: overallspeed,
+                    make_markup:true,
+                    isspeed:true
+                });
+            };
+
+            if(processCount > 0){
+                progressFiles = <div className='stat-count progress-item'>
+                                    <span className='glyphicon glyphicon-forward'></span>
+                                    <span className='count'>{processCount}</span>
+                                    {get_speed()}
+                                </div>;
+            }
+        }
+
+
+
+
         return (<div className='base-info'>
             <div className='name-rel text_wbuttons'>
                 <div className='name text'>{this.state.details().name}</div>
@@ -381,24 +445,31 @@ var Package = React.createClass({
 
             <div className="progress-info">
                 <div className='progress-quant'>
-                    <div className='size'>
-                        {sizeDone}
-                        <span className='delimiter'>/</span>
-                        {sizeTotal}
+                    <div className='horisontal-spaced-container'>
+                        <div className='size'>
+                            {sizeDone}
+                            <span className='delimiter'>/</span>
+                            {sizeTotal}
+                        </div>
                     </div>
-
-                    <div className='links'>
-                        <span className='links-done value'>{this.state.details().linksdone}</span>
-                        <span className='delimiter'>/</span>
-                        <span className='links-total value'>{this.state.details().linkstotal}</span>
+                    <div className='horisontal-spaced-container'>
+                        {errorFiles}
+                        <div className='links'>
+                            <span className='links-done value'>{this.state.details().linksdone}</span>
+                            <span className='delimiter'>/</span>
+                            <span className='links-total value'>{this.state.details().linkstotal}</span>
+                        </div>
                     </div>
                 </div>
-                <div className="progress">
-                    <div className="progress-bar" role="progressbar"
-                    aria-valuenow={links_progress}
-                    style={{width: links_progress+'%'}}
-                    aria-valuemin="0" aria-valuemax="100">
-                                                {links_progress+'%'}
+                <div className='horisontal-spaced-container progress-bar-item'>
+                    {progressFiles}
+                    <div className="progress">
+                        <div className="progress-bar" role="progressbar"
+                        aria-valuenow={links_progress}
+                        style={{width: links_progress+'%'}}
+                        aria-valuemin="0" aria-valuemax="100">
+                                                    {links_progress+'%'}
+                        </div>
                     </div>
                 </div>
             </div>

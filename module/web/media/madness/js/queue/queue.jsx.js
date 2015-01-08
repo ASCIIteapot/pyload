@@ -119,9 +119,31 @@ function toHuman(size_in_bytes){
 var _markupMatch = _.matches({make_markup:true});
 var _speedMatch = _.matches({isspeed:true});
 
-function formatWaiting(args_dict){
-    // time in ms
-    // make markap
+function formatTime(args_dict){
+    console.log(args_dict);
+    _.defaults(args_dict, {
+        value: 0,
+        waituntil: false,
+        inputype: null,
+        insertglyph: true
+    });
+
+    var value = args_dict.value;
+    if(args_dict.waituntil){
+        value = moment.unix(args_dict.value).diff(moment());
+    }
+
+    var span = moment.duration(value, args_dict.inputype);
+
+    var glyph = <span className='glyphicon glyphicon-time'></span>;
+    return <span className='eta time'>
+              {args_dict.insertglyph ? glyph : null}
+              <span className='hours value'>{span.hours()}</span>
+              <span className='delimiter'>:</span>
+              <span className='minutes value'>{span.minutes()}</span>
+              <span className='delimiter'>:</span>
+              <span className='seconds value'>{span.seconds()}</span>
+           </span>;
 }
 
 function formatSize(args_dict){
@@ -271,18 +293,20 @@ var Package = React.createClass({
                                 make_markup: true,
                                 isspeed: true
                         });
-                        items.push(<span>
-                            <span className='eta'>{stdata.format_eta}</span>
-                            <span className='delimiter'>@</span>
-                            {speed}
-                         </span>);
+                        var eta = formatTime({
+                            value: stdata.eta,
+                            input_type: 's'
+                        });
+                        items.push(eta);
+                        items.push(speed);
 
                         return items;
                     }
                     else if (super_setted == 'super-waiting'){
-                        var tmarkup = formatWaiting({
-                            time:stdata.wait_until,
-                            make_markup: true
+                        var tmarkup = formatTime({
+                            value:stdata.wait_until,
+                            insertglyph: true,
+                            waituntil: true
                         });
                         return <span>{tmarkup}</span>
                     }
@@ -313,7 +337,7 @@ var Package = React.createClass({
                        <td>{file.size ? size : null}</td>
                        <td className='info-data text_wbuttons_td'>
                            <div className='text_wbuttons align_right'>
-                               <div className='text'>{file_info()}</div>
+                               <div className='text horisontal-spaced-container'>{file_info()}</div>
                                 <div className="btn-group">
                                   <button type="button" className="btn btn-default"
                                       title='Перезапуск файла'
@@ -381,6 +405,7 @@ var Package = React.createClass({
 
         var errorFiles = null;
         var progressFiles = null;
+        var waitingFiles = null;
 
         var links = this.state.details().links;
         if(_.isArray(links)){
@@ -436,6 +461,27 @@ var Package = React.createClass({
                                     {get_speed()}
                                 </div>;
             }
+
+            // waiting
+            var waitingItems = _.chain(links)
+                .filter(function(item, index, list){
+                    return item.status == 'waiting';
+                });
+            var getWaitingMarkup = function(){
+                var max_wait = waitingItems.pluck('status-data')
+                    .pluck('wait_until')
+                    .max()
+                    .value();
+                return formatTime({value: max_wait, insertglyph:false, waituntil: true});
+            };
+
+            if(waitingItems.size().value()>0){
+                waitingFiles =   <span className='stat-count waiting-item'>
+                                <span className='glyphicon glyphicon-time waiting'></span>
+                                <span className='count'>{waitingItems.size().value()}</span>
+                                {getWaitingMarkup()}
+                             </span>;
+            }
         }
 
 
@@ -457,6 +503,7 @@ var Package = React.createClass({
                         </div>
                     </div>
                     <div className='horisontal-spaced-container'>
+                        {waitingFiles}
                         {errorFiles}
                         <div className='links'>
                             <span className='links-done value'>{this.state.details().linksdone}</span>
@@ -714,7 +761,7 @@ var PackageQueue = React.createClass({
                         file_['status-data'] = link;
                     }
                 });
-                console.log('load ', _.size(packages));
+                // console.log('load ', _.size(packages));
                 this.replaceState(packages);
             }.bind(this));
     },
@@ -770,7 +817,7 @@ var PackageQueue = React.createClass({
                                             lookupFiles={lookup_files}
                                             />);
         }.bind(this)).value();
-        console.log(_.size(this.state), _.size(packages));
+        // console.log(_.size(this.state), _.size(packages));
         return (<div className="pyload-package-collection">
                     {packages}
                 </div>);

@@ -71,6 +71,15 @@
     flex-grow: 1;
     height: inherit;
 }
+/* waiting */
+.pyload-package .stat-count.waiting-item{
+    background: #EBF0C9;
+    color: #000000;
+}
+
+.pyload-package .stat-count.waiting-item .count{
+    background: #E8E872;
+}
 /*------------------*/
 
 /*  начало ... индикация активного статуса для всего пакета в целом */
@@ -97,9 +106,12 @@
 }
 
 .pyload-package .delimiter{
-    margin-right: 5px;
-    margin-left: 5px;
     color: #999999;
+}
+
+.pyload-package .time .delimiter{
+    margin-right: 0px;
+    margin-left: 0px;
 }
 
 .package-control .btn-group .btn img{

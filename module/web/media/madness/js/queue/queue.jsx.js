@@ -209,6 +209,10 @@ var Package = React.createClass({
         }, 'Остановка файла '+file.url);
     },
     remove_file_command: function(file){
+        DoAjaxJsonRequest({
+            url: '/api/deleteFiles',
+            data: { args: [[file.fid]]}
+        }, 'Удаление файла '+file.url);
 //        DoAjaxJsonRequest({
 //            url: '/json/abort_files',
 //            data: { files_list: [file.fid]}

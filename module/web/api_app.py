@@ -6,13 +6,12 @@ from itertools import chain
 from traceback import format_exc, print_exc
 
 from bottle import route, request, response, HTTPError
-
 from utils import toDict, set_session
 from webinterface import PYLOAD
-
 from module.common.json_layer import json
 from module.lib.SafeEval import const_eval as literal_eval
 from module.Api import BaseObject
+
 
 # json encoder that accepts TBase objects
 class TBaseEncoder(json.JSONEncoder):
@@ -41,12 +40,16 @@ def call_api(func, args=""):
     if not PYLOAD.isAuthorized(func, {"role": s["role"], "permission": s["perms"]}):
         return HTTPError(401, json.dumps("Unauthorized"))
 
-    args = args.split("/")[1:]
-    kwargs = {}
+    if not args and request.json is not None:
+        args = request.json.get(u'args', [])
+        kwargs = request.json.get(u'kwargs', {})
+    else:
+        args = args.split("/")[1:]
+        kwargs = {}
 
-    for x, y in chain(request.GET.iteritems(), request.POST.iteritems()):
-        if x == "session": continue
-        kwargs[x] = unquote(y)
+        for x, y in chain(request.GET.iteritems(), request.POST.iteritems()):
+            if x == "session": continue
+            kwargs[x] = unquote(y)
 
     try:
         return callApi(func, *args, **kwargs)
@@ -60,8 +63,14 @@ def callApi(func, *args, **kwargs):
         print "Invalid API call", func
         return HTTPError(404, json.dumps("Not Found"))
 
-    result = getattr(PYLOAD, func)(*[literal_eval(x) for x in args],
-                                   **dict([(x, literal_eval(y)) for x, y in kwargs.iteritems()]))
+    def process_or_eval(target):
+        if isinstance(target, basestring):
+            return literal_eval(x)
+        else:
+            return target
+
+    result = getattr(PYLOAD, func)(*[process_or_eval(x) for x in args],
+                                   **dict([(x, process_or_eval(y)) for x, y in kwargs.iteritems()]))
 
     # null is invalid json  response
     if result is None: result = True

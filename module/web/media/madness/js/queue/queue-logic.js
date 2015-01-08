@@ -8,6 +8,12 @@ function onPackageActionClick(action_type, package_item){
     if(action_type == 'edit_package'){
         editPackage(pid);
     }
+    else if(action_type == 'remove_package'){
+        DoAjaxJsonRequest({
+            url: '/api/deletePackages',
+            data: { args: [[pid]]}
+        }, 'Удаление пакета '+pid);
+    }
     else if(action_type == 'move_package'){
         var dst = package_item.dest;
         if(dst == 'queue'){

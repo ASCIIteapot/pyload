@@ -1,0 +1,20 @@
+{% extends 'madness/base.html' %}
+{% block title %}{{ _("Config") }} - {{ super() }} {% endblock %}
+{% block header%}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!--<script type="text/jsx" src="/media/madness/js/config/config-logic.js"></script>-->
+<script type="text/jsx" src="/media/madness/js/config/config.jsx"></script>
+<link rel="stylesheet" href="/media/madness/css/config.css">
+{% endblock %}
+
+{% block container_content %}
+<div id="config-view"></div>
+
+<script type="text/jsx">
+/** @jsx React.DOM */
+React.renderComponent(<PyLoadConfig/>, $('#config-view').get(0));
+</script>
+
+{% endblock %}

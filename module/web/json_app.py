@@ -287,6 +287,23 @@ def set_captcha():
     else:
         return {'captcha': False}
 
+@route("/json/load_config_list")
+@login_required("SETTINGS")
+def load_config_list():
+    def tune_dict(conf_dict):
+        newDict = dict(conf_dict)
+        for key, value in newDict.items():
+            activated = 'undefined'
+            if 'activated' in value:
+                activated = value['activated']['value']
+
+            newDict[key] = {'activated': activated}
+        return newDict
+    conf_dict = {
+        "general": tune_dict(PYLOAD.getConfigDict()),
+        "plugin": tune_dict(PYLOAD.getPluginConfigDict())
+    }
+    return conf_dict
 
 @route("/json/load_config/:category/:section")
 @login_required("SETTINGS")
@@ -305,22 +322,15 @@ def load_config(category, section):
 
         option["value"] = decode(option["value"])
 
-    return render_to_response("settings_item.html", {"skey": section, "section": conf[section]})
+    return conf[section]
 
-
-@route("/json/save_config/:category", method="POST")
+@route("/json/save_config/:category/:section", method="POST")
 @login_required("SETTINGS")
-def save_config(category):
-    for key, value in request.POST.iteritems():
-        try:
-            section, option = key.split("|")
-        except:
-            continue
-
-        if category == "general": category = "core"
-
+def save_config(category, section):
+    if category == "general": category = "core"
+    for option, value in request.json.iteritems():
         PYLOAD.setConfigValue(section, option, decode(value), category)
-
+    return {'success': True}
 
 @route("/json/add_account", method="POST")
 @login_required("ACCOUNTS")

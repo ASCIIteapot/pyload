@@ -1,0 +1,39 @@
+html, body, #body-container, #config-view, #config-view > div {height: 100%;}
+
+#config-view > div{
+    display: flex;
+}
+
+#config-view .config-list{
+    width: 400px;
+}
+
+#config-view .edit_form{
+    margin-left: 20px;
+    margin-bottom: 0px;
+    /*background: yellowgreen;*/
+    width: 100%;
+}
+
+#config-view .edit_form .panel-title > span > span{
+    margin-left: 5px;
+}
+
+#config-view .edit_form .panel-title > span > span.outline{
+    color: #c4e3f3;
+}
+
+.scrolled
+{
+    overflow-y:auto;
+    height:100%;
+}
+
+/* делаем так что бы окно правильно отрисовывалось без ненужных прокруток */
+body {
+    margin-bottom: 0px;
+}
+
+body > .container {
+    padding: 60px 15px 60px;
+}

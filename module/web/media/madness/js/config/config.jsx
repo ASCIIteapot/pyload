@@ -14,13 +14,23 @@ function convert_property(name, value, on_input_callback){
             on_input_callback(event.target.value);
     };
 
+    var string_types = [
+        'str',
+        'string',
+        'folder',
+        'ip',
+        'int',
+        'time',
+        'file'
+    ];
+
     if(name == 'activated'){
         return null;
     }
     else if(! _.isObject(value)){
         return null;
     }
-    else if(value.type == 'str' || value.type == 'string' || value.type == 'int'){
+    else if(_.contains(string_types, value.type)){
         input_value = <input className="form-control" id={name}
                              onChange={on_input} value={value.value}></input>;
     }
@@ -179,7 +189,14 @@ var PyLoadConfig = React.createClass({
                       data: commit_data
                   }, description)
                       .done(function( data, textStatus, jqXHR ){
-                          this.setState({curently_edited: null})
+                          var newState = _.clone(ced);
+                          newState.operation_status = 'success';
+                          this.setState({curently_edited: newState})
+                      }.bind(this))
+                      .fail(function( jqXHR, status, err ) {
+                          var newState = _.clone(ced);
+                          newState.operation_status = 'error';
+                          this.setState({curently_edited: newState})
                       }.bind(this));
               }.bind(this);
 
@@ -191,14 +208,27 @@ var PyLoadConfig = React.createClass({
                                         Отменить
                                     </button>
                                 </div>;
+              console.log('ced', ced);
 
-              return <form className='edit_form panel panel-primary'>
+              var is_desibled = ! this.state[ced.category][ced.section].activated;
+              var panel_classes = {
+                  edit_form: true,
+                  panel: true,
+                  'panel-default': is_desibled,
+                  'panel-primary': !is_desibled && (ced.operation_status != 'success' && ced.operation_status != 'error'),
+                  'panel-success': ced.operation_status == 'success',
+                  'panel-danger': ced.operation_status == 'error'
+              };
+
+              return <form className={cs(panel_classes)}>
                         <div className="panel-heading">
                             {get_title_vdom()}
                         </div>
                         <div className='panel-body scrolled' onInput={on_form_input}>
-                            {input_items}
-                            {this.state.curently_edited.props_changed ? button_group: null}
+                            <fieldset disabled={is_desibled}>
+                                {input_items}
+                                {this.state.curently_edited.props_changed ? button_group: null}
+                            </fieldset>
                         </div>
                      </form>;
           }
@@ -209,26 +239,58 @@ var PyLoadConfig = React.createClass({
     render: function(){
           var conf_pointer = this;
           var list_con_func = function(group, items){
-              return _.map(items, function(value, key, list){
-                    var projected_items = [];
-                    if(value.activated != 'undefined'){
-                        projected_items.push(
-                            <div className="checkbox">
-                                <label>
-                                  <input type="checkbox" checked={value.activated}> {key}</input>
-                                </label>
-                            </div>);
-                    }
-                    else{
-                        projected_items.push(key);
-                    }
+              return _.chain(items)
+                  .pairs()
+                  .sortBy(function(pair){return pair[0];})
+                        .map(function(pair){
+                            var key = pair[0];
+                            var value = pair[1];
+                            var projected_items = [];
+                            if(value.activated != 'undefined'){
+                                var on_activated_changed = function(event){
+                                    var new_value = event.target.checked;
+                                    console.log('on_activated_changed', new_value);
 
-                  var onItemClick = function(event){
-                      this.start_edit_item(group, key);
-                  }.bind(conf_pointer);
-                    return (<a key={group + '_' + key} onClick={onItemClick}
-                                className="list-group-item">{projected_items}</a>);
-                });
+                                    var description = (new_value ? 'А': 'Деа') + 'ктивация для '+group + '/' + key;
+                                    var url = '/json/save_config/'+group+ '/' +key;
+                                    DoAjaxJsonRequest({
+                                      url: url,
+                                      method: 'POST',
+                                      data: {activated: new_value}
+                                    }, description)
+                                      .done(function( data, textStatus, jqXHR ){
+                                          var ssState= {};
+                                          ssState[group] = _.clone(conf_pointer.state[group]);
+                                          ssState[group][key] = {};
+                                          ssState[group][key].activated = new_value;
+                                            conf_pointer.setState(ssState);
+                                      }.bind(this));
+                                };
+
+                                projected_items.push(
+                                    <div className="checkbox">
+                                        <label>
+                                          <input type="checkbox" onChange={on_activated_changed} checked={value.activated}> {key}</input>
+                                        </label>
+                                    </div>);
+                            }
+                            else{
+                                projected_items.push(key);
+                            }
+
+                          var onItemClick = function(event){
+                              this.start_edit_item(group, key);
+                          }.bind(conf_pointer);
+                                var ced = conf_pointer.state.curently_edited;
+                                var a_classes = {
+                                    'list-group-item': true,
+                                    'active': _.isObject(ced) && _.matches({category: group, section: key})(ced)
+                                };
+                                return (<a key={group + '_' + key} onClick={onItemClick}
+                                        href='#'
+                                        className={cs(a_classes)}>{projected_items}</a>);
+                        })
+                    .value();
           };
           var create_group = function(name, className, items){
               return <div className={className}>

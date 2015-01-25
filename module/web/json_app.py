@@ -192,6 +192,42 @@ def parse_urls():
             parsed_urls.append({'url': url, 'plugin': plugin})
     return {'urls': parsed_urls}
 
+@route("/json/restart_package", method="POST")
+@login_required('MODIFY')
+def restart_packages():
+    packages_list = [int(fid) for fid in request.json.get(u'packages_list', [])]
+    restart_condition = request.json.get(u'restart_condition', None)
+
+    statusMap = {
+            "finished":    None,
+            "offline":     [u'error', u'waiting'],
+            "online":      None,
+            "queued":      None,
+            "skipped":     None,
+            "waiting":     [u'waiting'],
+            "temp. offline": [u'error', u'waiting'],
+            "starting":    None,
+            "failed":      [u'error', u'waiting'],
+            "aborted":     [u'error', u'waiting'],
+            "decrypting":  None,
+            "custom":      None,
+            "downloading": None,
+            "processing":  None,
+            "unknown":     None,
+        }
+
+    appr_statuses = [PyFile.statusMap[key] for key, value in statusMap.iteritems() if (restart_condition is None) or (value is not None and set(value).intersection(set(restart_condition)))]
+
+    def filter_func(pyfile):
+        return pyfile.status in appr_statuses
+
+    packages = [list(PYLOAD.getPackageData(pid).links) for pid in packages_list]
+    files = sum(packages, [])
+    files = filter(filter_func, files)
+    for fid in (pyf.fid for pyf in files):
+        PYLOAD.restartFile(fid)
+    return {"response": "success"}
+
 @route("/json/restart_files", method="POST")
 @login_required('MODIFY')
 def restart_files():
@@ -205,6 +241,16 @@ def restart_files():
 def abort_files():
     files_list = (int(fid) for fid in request.json[u'files_list'])
     PYLOAD.stopDownloads(files_list)
+    return {"response": "success"}
+
+@route("/json/abort_packages", method="POST")
+@login_required('MODIFY')
+def abort_packages():
+    packages_list = (int(pid) for pid in request.json[u'packages_list'])
+    packages = [list(PYLOAD.getPackageData(pid).links) for pid in packages_list]
+    pyfiles = [pyfile.fid for pyfile in sum(packages, [])]
+
+    PYLOAD.stopDownloads(pyfiles)
     return {"response": "success"}
 
 @route("/json/add_package")

@@ -121,6 +121,7 @@ ul.controls-group li{
 }
 
 /* глифы */
+.glyphicon.abort,
 .glyphicon.error,
 .glyphicon.remove{
     color: red;

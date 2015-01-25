@@ -27,6 +27,30 @@ function onPackageActionClick(action_type, package_item){
             url: '/json/move_package/' + dst +'/' +pid
         }, 'Перемещение пакета')
     }
+    else if(action_type == 'restart_all'){
+        DoAjaxJsonRequest({
+            url: '/json/restart_package',
+            data: { packages_list: [pid]}
+        }, 'Перезапуск всех файлов в пакете '+pid);
+    }
+    else if(action_type == 'restart_errors'){
+        DoAjaxJsonRequest({
+            url: '/json/restart_package',
+            data: { packages_list: [pid], restart_condition: ['error']}
+        }, 'Перезапуск ошибочных файлов в пакете '+pid);
+    }
+    else if(action_type == 'restart_errors_and_wait'){
+        DoAjaxJsonRequest({
+            url: '/json/restart_package',
+            data: { packages_list: [pid], restart_condition: ['error', 'waiting']}
+        }, 'Перезапуск ошибочных и лжидающих файлов в пакете '+pid);
+    }
+    else if(action_type == 'abort_package'){
+        DoAjaxJsonRequest({
+            url: '/json/abort_packages',
+            data: { packages_list: [pid]}
+        }, 'Остановка всех файлов в пакете '+pid);
+    }
 }
 
 function editPackage(pid, anchor){

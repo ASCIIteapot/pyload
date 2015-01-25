@@ -83,15 +83,15 @@
 /*------------------*/
 
 /*  начало ... индикация активного статуса для всего пакета в целом */
-.pyload-package.done{
+.pyload-package.done .header{
     background: #F2FFE8;
 }
 
-.pyload-package.super-processing{
+.pyload-package.super-processing .header{
     background: #E3EBF4;
 }
 
-.pyload-package.super-waiting{
+.pyload-package.super-waiting .header{
     background: #F3EEE2;
 }
 
@@ -130,12 +130,16 @@
   Restart items
 */
 
+.package-control .package-restart .restart_all{
+    color: dodgerblue;
+}
+
 .package-control .package-restart .restart_errors{
-    background: #E9D2D3;
+    color: red;
 }
 
 .package-control .package-restart .restart_errors_and_wait{
-    background: #FFF9A2;
+    color: darkorange;
 }
 
 .header:not(:hover) .aux-info{

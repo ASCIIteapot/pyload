@@ -56,28 +56,35 @@ var package_control_items=[
         description: 'Удаление пакета',    // l18n
         icon: 'glyphicon glyphicon-remove remove',
         action: 'remove_package'
+    },
+    {
+        id: 'abort',
+        name: 'abort',                                    // l18n
+        description: 'Остановка пакета',    // l18n
+        icon: 'glyphicon glyphicon-ban-circle abort',
+        action: 'abort_package'
     }
     ];
 
-    var restart_items=[
+var restart_items=[
     {
         id: 'restart_all',
         name: 'restart all',                                    // l18n
-        description: 'Force restart all files in package',    // l18n
+        description: 'Перезапуск всех файлов в пакете',    // l18n
         icon: 'glyphicon glyphicon-repeat',
         action: 'restart_all'
     },
     {
         id: 'restart_errors',
         name: 'restart errors',                                    // l18n
-        description: 'Force restart only error files in package',    // l18n
+        description: 'Перезапуск только файлов со статусом ошибки',    // l18n
         icon: 'glyphicon glyphicon-repeat',
         action: 'restart_errors'
     },
     {
         id: 'restart_errors_and_wait',
         name: 'restart errors and wait',                                    // l18n
-        description: 'Force restart error and wait files in package',    // l18n
+        description: 'Перезапуск файлов находящихся в режиме ожидания или ошибки',    // l18n
         icon: 'glyphicon glyphicon-repeat',
         action: 'restart_errors_and_wait'
     }
@@ -386,6 +393,7 @@ var Package = React.createClass({
         /* <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.props.pid))}</div> */
         return <div className='package-control btn-toolbar aux-info'>
                     <div className='btn-group package-primary'>{package_control_items.map(mapControlItem(this.state.details()))}</div>
+                    <div className='btn-group package-restart'>{restart_items.map(mapControlItem(this.state.details()))}</div>
                 </div>;
     },
     get_package_base_info_vdom : function(){

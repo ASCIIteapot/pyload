@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from module.plugins.internal.MultiHoster import MultiHoster
-from module.network.RequestFactory import getURL
 from module.common.json_layer import json_loads
+from module.plugins.internal.MultiHook import MultiHook
 
 
-class LinksnappyCom(MultiHoster):
-    __name__ = "LinksnappyCom"
-    __version__ = "0.01"
-    __type__ = "hook"
-    __config__ = [("activated", "bool", "Activated", False),
-                  ("hosterListMode", "all;listed;unlisted", "Use for hosters (if supported)", "all"),
-                  ("hosterList", "str", "Hoster list (comma separated)", ""),
-                  ("unloadFailing", "bool", "Revert to standard download if download fails", False),
-                  ("interval", "int", "Reload interval in hours (0 to disable)", 24)]
+class LinksnappyCom(MultiHook):
+    __name__    = "LinksnappyCom"
+    __type__    = "hook"
+    __version__ = "0.04"
+
+    __config__ = [("pluginmode"    , "all;listed;unlisted", "Use for plugins"                     , "all"),
+                  ("pluginlist"    , "str"                , "Plugin list (comma separated)"       , ""   ),
+                  ("revertfailed"  , "bool"               , "Revert to standard download if fails", True ),
+                  ("retry"         , "int"                , "Number of retries before revert"     , 10   ),
+                  ("retryinterval" , "int"                , "Retry interval in minutes"           , 1    ),
+                  ("reload"        , "bool"               , "Reload plugin list"                  , True ),
+                  ("reloadinterval", "int"                , "Reload interval in hours"            , 12   )]
 
     __description__ = """Linksnappy.com hook plugin"""
-    __author_name__ = "stickell"
-    __author_mail__ = "l.stickell@yahoo.it"
+    __license__     = "GPLv3"
+    __authors__     = [("stickell", "l.stickell@yahoo.it")]
 
-    def getHoster(self):
-        json_data = getURL('http://gen.linksnappy.com/lseAPI.php?act=FILEHOSTS')
+
+    def getHosters(self):
+        json_data = self.getURL("http://gen.linksnappy.com/lseAPI.php", get={'act': "FILEHOSTS"})
         json_data = json_loads(json_data)
 
         return json_data['return'].keys()

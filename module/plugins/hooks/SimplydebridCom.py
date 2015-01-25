@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from module.network.RequestFactory import getURL
-from module.plugins.internal.MultiHoster import MultiHoster
+from module.plugins.internal.MultiHook import MultiHook
 
 
-class SimplydebridCom(MultiHoster):
-    __name__ = "SimplydebridCom"
-    __version__ = "0.01"
-    __type__ = "hook"
-    __config__ = [("activated", "bool", "Activated", False),
-                  ("hosterListMode", "all;listed;unlisted", "Use for hosters (if supported)", "all"),
-                  ("hosterList", "str", "Hoster list (comma separated)", "")]
+class SimplydebridCom(MultiHook):
+    __name__    = "SimplydebridCom"
+    __type__    = "hook"
+    __version__ = "0.04"
+
+    __config__ = [("pluginmode"    , "all;listed;unlisted", "Use for plugins"                     , "all"),
+                  ("pluginlist"    , "str"                , "Plugin list (comma separated)"       , ""   ),
+                  ("revertfailed"  , "bool"               , "Revert to standard download if fails", True ),
+                  ("retry"         , "int"                , "Number of retries before revert"     , 10   ),
+                  ("retryinterval" , "int"                , "Retry interval in minutes"           , 1    ),
+                  ("reload"        , "bool"               , "Reload plugin list"                  , True ),
+                  ("reloadinterval", "int"                , "Reload interval in hours"            , 12   )]
+
     __description__ = """Simply-Debrid.com hook plugin"""
-    __author_name__ = "Kagenoshin"
-    __author_mail__ = "kagenoshin@gmx.ch"
+    __license__     = "GPLv3"
+    __authors__     = [("Kagenoshin", "kagenoshin@gmx.ch")]
 
-    def getHoster(self):
-        page = getURL("http://simply-debrid.com/api.php?list=1")
+
+    def getHosters(self):
+        page = self.getURL("http://simply-debrid.com/api.php", get={'list': 1})
         return [x.strip() for x in page.rstrip(';').replace("\"", "").split(";")]

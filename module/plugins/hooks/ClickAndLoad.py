@@ -1,82 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License,
-    or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See the GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, see <http://www.gnu.org/licenses/>.
-
-    @author: RaNaN
-    @interface-version: 0.2
-"""
-
 import socket
-import thread
 
-from module.plugins.Hook import Hook
+from threading import Thread, Lock
+from time import sleep
 
-
-class ClickAndLoad(Hook):
-    __name__ = "ClickAndLoad"
-    __version__ = "0.22"
-    __description__ = """Gives abillity to use jd's click and load. depends on webinterface"""
-    __config__ = [("activated", "bool", "Activated", True),
-                  ("extern", "bool", "Allow external link adding", False)]
-    __author_name__ = ("RaNaN", "mkaay")
-    __author_mail__ = ("RaNaN@pyload.de", "mkaay@mkaay.de")
-
-    def coreReady(self):
-        self.port = int(self.config['webinterface']['port'])
-        if self.config['webinterface']['activated']:
-            try:
-                if self.getConfig("extern"):
-                    ip = "0.0.0.0"
-                else:
-                    ip = "127.0.0.1"
-
-                thread.start_new_thread(proxy, (self, ip, self.port, 9666))
-            except:
-                self.logError("ClickAndLoad port already in use.")
-
-
-def proxy(self, *settings):
-    thread.start_new_thread(server, (self,) + settings)
-    lock = thread.allocate_lock()
-    lock.acquire()
-    lock.acquire()
-
-
-def server(self, *settings):
-    try:
-        dock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        dock_socket.bind((settings[0], settings[2]))
-        dock_socket.listen(5)
-        while True:
-            client_socket = dock_socket.accept()[0]
-            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_socket.connect(("127.0.0.1", settings[1]))
-            thread.start_new_thread(forward, (client_socket, server_socket))
-            thread.start_new_thread(forward, (server_socket, client_socket))
-    except socket.error, e:
-        if hasattr(e, "errno"):
-            errno = e.errno
-        else:
-            errno = e.args[0]
-
-        if errno == 98:
-            self.logWarning(_("Click'N'Load: Port 9666 already in use"))
-            return
-        thread.start_new_thread(server, (self,) + settings)
-    except:
-        thread.start_new_thread(server, (self,) + settings)
+from module.plugins.Hook import Hook, threaded
 
 
 def forward(source, destination):
@@ -86,5 +15,61 @@ def forward(source, destination):
         if string:
             destination.sendall(string)
         else:
-            #source.shutdown(socket.SHUT_RD)
             destination.shutdown(socket.SHUT_WR)
+
+
+class ClickAndLoad(Hook):
+    __name__    = "ClickAndLoad"
+    __type__    = "hook"
+    __version__ = "0.26"
+
+    __config__ = [("activated", "bool", "Activated"                                     , True ),
+                  ("port"     , "int" , "Port"                                          , 9666 ),
+                  ("extern"   , "bool", "Listen for requests coming from WAN (internet)", False)]
+
+    __description__ = """Click'N'Load hook plugin"""
+    __license__     = "GPLv3"
+    __authors__     = [("RaNaN", "RaNaN@pyload.de"),
+                       ("Walter Purcaro", "vuolter@gmail.com")]
+
+
+    def coreReady(self):
+        if not self.config['webinterface']['activated']:
+            return
+
+        ip      = "0.0.0.0" if self.getConfig("extern") else "127.0.0.1"
+        webport = int(self.config['webinterface']['port'])
+        cnlport = self.getConfig('port')
+
+        self.proxy(ip, webport, cnlport)
+
+
+    @threaded
+    def proxy(self, ip, webport, cnlport):
+        hookManager.startThread(self.server, ip, webport, cnlport)
+        lock = Lock()
+        lock.acquire()
+        lock.acquire()
+
+
+    def server(self, ip, webport, cnlport):
+        try:
+            dock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            dock_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            dock_socket.bind((ip, cnlport))
+            dock_socket.listen(5)
+
+            while True:
+                server_socket = dock_socket.accept()[0]
+                client_socket = socket.create_connection(("127.0.0.1", webport))
+
+                hookManager.startThread(forward, server_socket, client_socket)
+                hookManager.startThread(forward, client_socket, server_socket)
+
+        except socket.error, e:
+            self.logError(e)
+            self.server(ip, webport, cnlport)
+
+        finally:
+            dock_socket.close()

@@ -1,74 +1,68 @@
 # -*- coding: utf-8 -*-
-###############################################################################
-#  This program is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU Affero General Public License as
-#  published by the Free Software Foundation, either version 3 of the
-#  License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU Affero General Public License for more details.
-#
-#  You should have received a copy of the GNU Affero General Public License
-#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#  @author: Walter Purcaro
-###############################################################################
 
 import re
+
 from base64 import urlsafe_b64encode
 from time import time
 
-from module.plugins.internal.SimpleCrypter import SimpleCrypter
+from module.plugins.internal.SimpleCrypter import SimpleCrypter, create_getInfo
 
 
 class DlProtectCom(SimpleCrypter):
-    __name__ = "DlProtectCom"
-    __type__ = "crypter"
-    __pattern__ = r'http://(?:www\.)?dl-protect\.com/((en|fr)/)?(?P<ID>\w+)'
-    __version__ = "0.01"
-    __description__ = """Dl-protect.com decrypter plugin"""
-    __author_name__ = "Walter Purcaro"
-    __author_mail__ = "vuolter@gmail.com"
+    __name__    = "DlProtectCom"
+    __type__    = "crypter"
+    __version__ = "0.03"
 
-    OFFLINE_PATTERN = r'>Unfortunately, the link you are looking for is not found'
+    __pattern__ = r'https?://(?:www\.)?dl-protect\.com/((en|fr)/)?\w+'
+    __config__  = [("use_subfolder", "bool", "Save package to subfolder", True),
+                   ("subfolder_per_package", "bool", "Create a subfolder for each package", True)]
+
+    __description__ = """Dl-protect.com decrypter plugin"""
+    __license__     = "GPLv3"
+    __authors__     = [("Walter Purcaro", "vuolter@gmail.com")]
+
+
+    COOKIES = [("dl-protect.com", "l", "en")]
+
+    OFFLINE_PATTERN = r'Unfortunately, the link you are looking for is not found'
+
 
     def getLinks(self):
         # Direct link with redirect
-        if not re.match(r"http://(?:www\.)?dl-protect\.com", self.req.http.lastEffectiveURL):
+        if not re.match(r"https?://(?:www\.)?dl-protect\.com/.+", self.req.http.lastEffectiveURL):
             return [self.req.http.lastEffectiveURL]
 
-        #id = re.match(self.__pattern__, self.pyfile.url).group("ID")
-        key = re.search(r'name="id_key" value="(.+?)"', self.html).group(1)
+        post_req = {'key'       : re.search(r'name="key" value="(.+?)"', self.html).group(1),
+                    'submitform': ""}
 
-        post_req = {"id_key": key, "submitform": ""}
+        if "Please click on continue to see the content" in self.html:
+            post_req['submitform'] = "Continue"
+            self.wait(2)
 
-        if self.OFFLINE_PATTERN in self.html:
-            self.offline()
-        elif ">Please click on continue to see the content" in self.html:
-            post_req.update({"submitform": "Continue"})
         else:
-            mstime = int(round(time() * 1000))
+            mstime  = int(round(time() * 1000))
             b64time = "_" + urlsafe_b64encode(str(mstime)).replace("=", "%3D")
 
-            post_req.update({"i": b64time, "submitform": "Decrypt+link"})
+            post_req.update({'i'         : b64time,
+                             'submitform': "Decrypt+link"})
 
-            if ">Password :" in self.html:
-                post_req["pwd"] = self.getPassword()
+            if "Password :" in self.html:
+                post_req['pwd'] = self.getPassword()
 
-            if ">Security Code" in self.html:
-                captcha_id = re.search(r'/captcha\.php\?uid=(.+?)"', self.html).group(1)
-                captcha_url = "http://www.dl-protect.com/captcha.php?uid=" + captcha_id
+            if "Security Code" in self.html:
+                captcha_id   = re.search(r'/captcha\.php\?uid=(.+?)"', self.html).group(1)
+                captcha_url  = "http://www.dl-protect.com/captcha.php?uid=" + captcha_id
                 captcha_code = self.decryptCaptcha(captcha_url, imgtype="gif")
 
-                post_req["secure"] = captcha_code
+                post_req['secure'] = captcha_code
 
         self.html = self.load(self.pyfile.url, post=post_req)
 
-        for errmsg in (">The password is incorrect", ">The security code is incorrect"):
+        for errmsg in ("The password is incorrect", "The security code is incorrect"):
             if errmsg in self.html:
-                self.fail(errmsg[1:])
+                self.fail(_(errmsg[1:]))
 
-        pattern = r'<a href="([^/].+?)" target="_blank">'
-        return re.findall(pattern, self.html)
+        return re.findall(r'<a href="([^/].+?)" target="_blank">', self.html)
+
+
+getInfo = create_getInfo(DlProtectCom)

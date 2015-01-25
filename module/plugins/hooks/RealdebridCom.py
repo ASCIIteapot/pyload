@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from module.network.RequestFactory import getURL
-from module.plugins.internal.MultiHoster import MultiHoster
+from module.plugins.internal.MultiHook import MultiHook
 
 
-class RealdebridCom(MultiHoster):
-    __name__ = "RealdebridCom"
-    __version__ = "0.43"
-    __type__ = "hook"
+class RealdebridCom(MultiHook):
+    __name__    = "RealdebridCom"
+    __type__    = "hook"
+    __version__ = "0.46"
 
-    __config__ = [("activated", "bool", "Activated", False),
-                  ("https", "bool", "Enable HTTPS", False),
-                  ("hosterListMode", "all;listed;unlisted", "Use for hosters (if supported):", "all"),
-                  ("hosterList", "str", "Hoster list (comma separated)", ""),
-                  ("unloadFailing", "bool", "Revert to stanard download if download fails", False),
-                  ("interval", "int", "Reload interval in hours (0 to disable)", 24)]
+    __config__ = [("pluginmode"    , "all;listed;unlisted", "Use for plugins"                     , "all"),
+                  ("pluginlist"    , "str"                , "Plugin list (comma separated)"       , ""   ),
+                  ("revertfailed"  , "bool"               , "Revert to standard download if fails", True ),
+                  ("retry"         , "int"                , "Number of retries before revert"     , 10   ),
+                  ("retryinterval" , "int"                , "Retry interval in minutes"           , 1    ),
+                  ("reload"        , "bool"               , "Reload plugin list"                  , True ),
+                  ("reloadinterval", "int"                , "Reload interval in hours"            , 12   ),
+                  ("ssl"           , "bool"               , "Use HTTPS"                           , True )]
+
     __description__ = """Real-Debrid.com hook plugin"""
-    __author_name__ = "Devirex Hazzard"
-    __author_mail__ = "naibaf_11@yahoo.de"
+    __license__     = "GPLv3"
+    __authors__     = [("Devirex Hazzard", "naibaf_11@yahoo.de")]
 
-    def getHoster(self):
-        https = "https" if self.getConfig("https") else "http"
-        page = getURL(https + "://real-debrid.com/api/hosters.php").replace("\"", "").strip()
+
+    def getHosters(self):
+        https = "https" if self.getConfig("ssl") else "http"
+        page = self.getURL(https + "://real-debrid.com/api/hosters.php").replace("\"", "").strip()
 
         return [x.strip() for x in page.split(",") if x.strip()]

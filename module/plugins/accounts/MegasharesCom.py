@@ -7,14 +7,17 @@ from module.plugins.Account import Account
 
 
 class MegasharesCom(Account):
-    __name__ = "MegasharesCom"
-    __version__ = "0.02"
-    __type__ = "account"
+    __name__    = "MegasharesCom"
+    __type__    = "account"
+    __version__ = "0.03"
+
     __description__ = """Megashares.com account plugin"""
-    __author_name__ = "zoidberg"
-    __author_mail__ = "zoidberg@mujmail.cz"
+    __license__     = "GPLv3"
+    __authors__     = [("zoidberg", "zoidberg@mujmail.cz")]
+
 
     VALID_UNTIL_PATTERN = r'<p class="premium_info_box">Period Ends: (\w{3} \d{1,2}, \d{4})</p>'
+
 
     def loadAccountInfo(self, user, req):
         #self.relogin(user)
@@ -32,13 +35,14 @@ class MegasharesCom(Account):
 
         return {"validuntil": validuntil, "trafficleft": -1, "premium": premium}
 
+
     def login(self, user, data, req):
-        html = req.load('http://d01.megashares.com/myms_login.php', post={
-            "httpref": "",
-            "myms_login": "Login",
-            "mymslogin_name": user,
-            "mymspassword": data['password']
-        }, decode=True)
+        html = req.load('http://d01.megashares.com/myms_login.php',
+                        post={"httpref"       : "",
+                              "myms_login"    : "Login",
+                              "mymslogin_name": user,
+                              "mymspassword"  : data['password']},
+                        decode=True)
 
         if not '<span class="b ml">%s</span>' % user in html:
             self.wrongPassword()

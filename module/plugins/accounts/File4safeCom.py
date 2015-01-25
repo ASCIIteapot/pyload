@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from module.plugins.internal.XFSPAccount import XFSPAccount
+from module.plugins.internal.XFSAccount import XFSAccount
 
 
-class File4safeCom(XFSPAccount):
-    __name__ = "File4safeCom"
-    __version__ = "0.01"
-    __type__ = "account"
-    __description__ = """File4safe.com account plugin"""
-    __author_name__ = "stickell"
-    __author_mail__ = "l.stickell@yahoo.it"
+class File4SafeCom(XFSAccount):
+    __name__    = "File4SafeCom"
+    __type__    = "account"
+    __version__ = "0.05"
 
-    MAIN_PAGE = "http://file4safe.com/"
+    __description__ = """File4Safe.com account plugin"""
+    __license__     = "GPLv3"
+    __authors__     = [("stickell", "l.stickell@yahoo.it")]
+
+
+    HOSTER_DOMAIN = "file4safe.com"
 
     LOGIN_FAIL_PATTERN = r'input_login'
-    PREMIUM_PATTERN = r'Extend Premium'

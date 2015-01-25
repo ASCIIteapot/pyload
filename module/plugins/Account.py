@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, see <http://www.gnu.org/licenses/>.
-
+    
     @author: mkaay
 """
 
@@ -36,16 +36,16 @@ class Account(Base):
     associated hoster plugin. Plugin should also provide `loadAccountInfo`
     """
     __name__ = "Account"
-    __version__ = "0.3"
+    __version__ = "0.2"
     __type__ = "account"
-    __description__ = """Base account plugin"""
-    __author_name__ = "mkaay"
-    __author_mail__ = "mkaay@mkaay.de"
+    __description__ = """Account Plugin"""
+    __author_name__ = ("mkaay")
+    __author_mail__ = ("mkaay@mkaay.de")
 
-    #: after that time (in minutes) pyload will relogin the account
-    login_timeout = 10 * 60
-    #: after that time (in minutes) account data will be reloaded
-    info_threshold = 10 * 60
+    #: after that time [in minutes] pyload will relogin the account
+    login_timeout = 600
+    #: account data will be reloaded after this time
+    info_threshold = 600
 
 
     def __init__(self, manager, accounts):
@@ -76,7 +76,7 @@ class Account(Base):
     def _login(self, user, data):
         # set timestamp for login
         self.timestamps[user] = time()
-
+        
         req = self.getAccountRequest(user)
         try:
             self.login(user, data, req)
@@ -84,20 +84,17 @@ class Account(Base):
             self.logWarning(
                 _("Could not login with account %(user)s | %(msg)s") % {"user": user
                                                                         , "msg": _("Wrong Password")})
-            success = data["valid"] = False
+            data["valid"] = False
+
         except Exception, e:
             self.logWarning(
                 _("Could not login with account %(user)s | %(msg)s") % {"user": user
                                                                         , "msg": e})
-            success = data["valid"] = False
+            data["valid"] = False
             if self.core.debug:
                 print_exc()
-        else:
-            success = True
         finally:
-            if req:
-                req.close()
-            return success
+            if req: req.close()
 
     def relogin(self, user):
         req = self.getAccountRequest(user)
@@ -107,7 +104,7 @@ class Account(Base):
         if user in self.infos:
             del self.infos[user] #delete old information
 
-        return self._login(user, self.accounts[user])
+        self._login(user, self.accounts[user])
 
     def setAccounts(self, accounts):
         self.accounts = accounts
@@ -287,10 +284,9 @@ class Account(Base):
     def checkLogin(self, user):
         """ checks if user is still logged in """
         if user in self.timestamps:
-            if self.login_timeout > 0 and self.timestamps[user] + self.login_timeout * 60 < time():
+            if self.timestamps[user] + self.login_timeout * 60 < time():
                 self.logDebug("Reached login timeout for %s" % user)
-                return self.relogin(user)
-            else:
-                return True
-        else:
-            return False
+                self.relogin(user)
+                return False
+
+        return True

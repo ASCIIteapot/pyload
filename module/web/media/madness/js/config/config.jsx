@@ -87,7 +87,7 @@ var PyLoadConfig = React.createClass({
         };
       },
       componentDidMount: function() {
-            $.ajax({
+            DoAjaxJsonRequest({
               url: '/json/load_config_list',
               dataType: 'json',
               success: function(data) {

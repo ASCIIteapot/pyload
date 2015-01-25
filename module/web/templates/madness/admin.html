@@ -1,0 +1,17 @@
+{% extends 'madness/base.html' %}
+{% block title %}{{ _("Administrate") }} - {{ super() }} {% endblock %}
+{% block header%}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script type="text/jsx" src="/media/madness/js/admin/admin-logic.js"></script>
+{% endblock %}
+
+
+{% block container_content %}
+<div class="horisontal-spaced-container">
+    <button type="button" class="btn btn-primary" data-action="quit">{{_("Quit pyLoad")}}</button>
+    <button type="button" class="btn btn-primary" data-action="restart">{{_("Restart pyLoad")}}</button>
+</div>
+
+{% endblock %}

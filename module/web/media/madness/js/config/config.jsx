@@ -90,6 +90,7 @@ var PyLoadConfig = React.createClass({
             DoAjaxJsonRequest({
               url: '/json/load_config_list',
               dataType: 'json',
+              method: 'GET',
               success: function(data) {
                 this.setState(data);
               }.bind(this),

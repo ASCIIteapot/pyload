@@ -31,23 +31,19 @@
 
 /* статус активных закачек пакета */
 .pyload-package .stat-count > *{
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
-.pyload-package .stat-count > .count{
-    font-weight: bold;
-    color: black;
+
+.pyload-package .stat-count{
+    align-self: center;
 }
 
-/* error */
-.pyload-package .stat-count.error-item{
-    background: #F0C7B3;
+.pyload-package .stat-count .value{
+    font-weight: lighter;
 }
 
-.pyload-package .stat-count.error-item .count{
-    background: #DE8486;
-}
 /* progress */
 .pyload-package .stat-count.progress-item{
     background: #CFE2F6;
@@ -70,15 +66,6 @@
 .pyload-package .progress-bar-item .progress{
     flex-grow: 1;
     height: inherit;
-}
-/* waiting */
-.pyload-package .stat-count.waiting-item{
-    background: #EBF0C9;
-    color: #000000;
-}
-
-.pyload-package .stat-count.waiting-item .count{
-    background: #E8E872;
 }
 /*------------------*/
 

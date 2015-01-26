@@ -295,24 +295,26 @@ var Package = React.createClass({
                             }));
                         }
 
-                        var speed = formatSize({
-                                value: stdata.speed,
-                                make_markup: true,
-                                isspeed: true
-                        });
-                        var eta = formatTime({
-                            value: stdata.eta,
-                            input_type: 's'
-                        });
-                        items.push(eta);
-                        items.push(speed);
-
+                        if(stdata.status == 'downloading'){
+                            var speed = formatSize({
+                                    value: stdata.speed,
+                                    make_markup: true,
+                                    isspeed: true
+                            });
+                            var eta = formatTime({
+                                value: stdata.eta,
+                                insertglyph: false,
+                                //input_type: 'ms'
+                            });
+                            items.push(eta);
+                            items.push(speed);
+                        }
                         return items;
                     }
                     else if (super_setted == 'super-waiting'){
                         var tmarkup = formatTime({
                             value:stdata.wait_until,
-                            insertglyph: true,
+                            insertglyph: false,
                             waituntil: true
                         });
                         return <span>{tmarkup}</span>
@@ -425,10 +427,7 @@ var Package = React.createClass({
                 .size()
                 .value();
             if(errCount > 0){
-                errorFiles = <span className='stat-count error-item'>
-                                <span className='glyphicon glyphicon-warning-sign error'></span>
-                                <span className='count'>{errCount}</span>
-                             </span>;
+                errorFiles = <span className='stat-count label label-danger'>{errCount}</span>;
             }
 
             // progress
@@ -484,11 +483,10 @@ var Package = React.createClass({
             };
 
             if(waitingItems.size().value()>0){
-                waitingFiles =   <span className='stat-count waiting-item'>
-                                <span className='glyphicon glyphicon-time waiting'></span>
-                                <span className='count'>{waitingItems.size().value()}</span>
-                                {getWaitingMarkup()}
-                             </span>;
+                waitingFiles =   <span className='stat-count waiting-item label label-warning'>
+                                    <span className='count'>{waitingItems.size().value()}</span>
+                                    {getWaitingMarkup()}
+                                 </span>;
             }
         }
 

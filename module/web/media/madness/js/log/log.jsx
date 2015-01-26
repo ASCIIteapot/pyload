@@ -4,7 +4,7 @@
  */
 
 var cs=React.addons.classSet;
-var logRegexObject = new RegExp('(\\S+) (\\S+) (\\S+) (.+)\\s*$');
+var logRegexObject = new RegExp('(\\d{2}\\.\\d{2}\\.\\d{4}) (\\S+) (\\S+) (.+)\\s*$');
 var PyLoadLog = React.createClass({
     getInitialState: function() {
         return {
@@ -20,14 +20,28 @@ var PyLoadLog = React.createClass({
           success: function(data) {
               var items = _.map(data, function(item, index){
                   var parsed = logRegexObject.exec(item);
-                  return {
-                      number : index + this_pointer.state.offset,
-                      logitem: {
-                          date: parsed[1],
-                          time: parsed[2],
-                          level: parsed[3],
-                          message: parsed[4]
+                  if(_.isNull(parsed)){
+                      return {
+                          number : index + this_pointer.state.offset,
+                          logitem: {
+                              date: null,
+                              time: null,
+                              level: null,
+                              message: item
+                          }
                       }
+                  }
+                  else{
+                      return {
+                            number : index + this_pointer.state.offset,
+                          logitem: {
+                              date: parsed[1],
+                              time: parsed[2],
+                              level: parsed[3],
+                              message: parsed[4]
+                          }
+                      }
+
                   };
               });
               var newEntries = _.union(this_pointer.state.logentres, items);

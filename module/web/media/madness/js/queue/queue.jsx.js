@@ -761,10 +761,12 @@ var PackageQueue = React.createClass({
                 }
 
                 results[0]['links'].forEach(function(link, index){
-                    var package_ = packages[link.packageID];
-                    if('links' in package_){
-                        var file_ = _.find(package_.links, function(item){return item.fid == link.fid});
-                        file_['status-data'] = link;
+                    if(_.has(packages, link.packageID)){
+                        var package_ = packages[link.packageID];
+                        if(_.has(package_, 'links')){
+                            var file_ = _.find(package_.links, function(item){return item.fid == link.fid});
+                            file_['status-data'] = link;
+                        }
                     }
                 });
                 // console.log('load ', _.size(packages));

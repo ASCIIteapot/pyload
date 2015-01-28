@@ -825,6 +825,22 @@ class Api(Iface):
             return CaptchaTask(-1)
 
     @permission(PERMS.STATUS)
+    def getCaptchaTasks(self, exclusive=False):
+        """Returns a captcha task
+
+        :param exclusive: unused
+        :return: `CaptchaTask`
+        """
+        self.core.lastClientConnected = time()
+        tasks = self.core.captchaManager.getTasks()
+        def conv_task(task):
+            task.setWatingForUser(exclusive=exclusive)
+            data, type, result = task.getCaptcha()
+            t = CaptchaTask(int(task.id), standard_b64encode(data), type, result)
+            return t
+        return map(conv_task, tasks)
+
+    @permission(PERMS.STATUS)
     def getCaptchaTaskStatus(self, tid):
         """Get information about captcha task
 

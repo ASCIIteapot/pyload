@@ -5,7 +5,7 @@ from traceback import print_exc
 from shutil import copyfileobj
 
 from os.path import join
-from bottle import route, request, HTTPError
+from bottle import route, request, HTTPError, static_file
 from webinterface import PYLOAD
 from utils import login_required, render_to_response, toDict
 from module.utils import decode, formatSize
@@ -332,6 +332,30 @@ def set_captcha():
         return {'captcha': True, 'id': task.tid, 'src': src, 'result_type': task.resultType}
     else:
         return {'captcha': False}
+
+@route("/json/get_captcha")
+@route("/json/get_captcha/<tid:int>")
+def get_captcha(**kwargs):
+    if 'tid' in kwargs:
+        task = PYLOAD.core.captchaManager.getTaskByID(int(kwargs['tid']))
+        return static_file(task.captchaFile, root='')
+    else:
+        active_tasks = PYLOAD.getCaptchaTasks()
+        def conv_func(captcha_task):
+            true_task = PYLOAD.core.captchaManager.getTaskByID(captcha_task.tid)
+            plugin = true_task.plugin
+            pyfile = plugin.pyfile
+            pypackage = pyfile.package()
+
+            ret_dict = {
+                'file': {'fid': pyfile.id, 'name': pyfile.name},
+                'package': {'pid': pypackage.id, 'name': pypackage.name},
+                'plugin': plugin.__name__
+            }
+
+            return captcha_task.tid, ret_dict
+        return dict(map(conv_func, active_tasks))
+
 
 @route("/json/load_config_list")
 @login_required("SETTINGS")

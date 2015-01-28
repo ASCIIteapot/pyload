@@ -29,8 +29,8 @@ class CaptchaManager():
 
         self.ids = 0 #only for internal purpose
 
-    def newTask(self, img, format, file, result_type):
-        task = CaptchaTask(self.ids, img, format, file, result_type)
+    def newTask(self, img, format, file, plugin, result_type):
+        task = CaptchaTask(self.ids, img, format, file, plugin, result_type)
         self.ids += 1
         return task
 
@@ -48,6 +48,16 @@ class CaptchaManager():
                 return task
         self.lock.release()
         return None
+
+    def getTasks(self):
+        self.lock.acquire()
+        def getSingleTask():
+            for task in self.tasks:
+                if task.status in ("waiting", "shared-user"):
+                    yield task
+        tasks = list(getSingleTask())
+        self.lock.release()
+        return tasks
 
     def getTaskByID(self, tid):
         self.lock.acquire()
@@ -81,7 +91,8 @@ class CaptchaManager():
 
 
 class CaptchaTask():
-    def __init__(self, id, img, format, file, result_type='textual'):
+    def __init__(self, id, img, format, file, plugin, result_type='textual'):
+        self.plugin = plugin
         self.id = str(id)
         self.captchaImg = img
         self.captchaFormat = format

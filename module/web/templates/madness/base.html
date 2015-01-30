@@ -14,8 +14,10 @@
 
 <!--<script src="/media/madness/vendor/require-2.1.14/require.js"></script>-->
 
+
 <script type="text/jsx" src="/media/madness/js/base/base.jsx.js"></script>
 <script type="text/jsx" src="/media/madness/js/base/package_ui.jsx.js"></script>
+<script type="text/jsx" src="/media/madness/js/base/captcha-service.jsx.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -25,7 +27,7 @@
 <script src="/media/madness/vendor/bootstrap-growl-1.1.0/jquery.bootstrap-growl.js"></script>
 <script src="/media/madness/js/base/base-logic.js"></script>
 <script src="/media/madness/js/base/confirmation-modal-logic.js"></script>
-
+<script src="/media/madness/js/base/captcha-logic.js"></script>
 <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar"></div>
 <div class="container main-container" id="body-container">
     <div id="actions-control"></div>
@@ -40,6 +42,7 @@
 {% include "madness/add_package_window.html" %}
 {% include "madness/edit_package_window.html" %}
 {% include "madness/confirmation-modal.html" %}
+{% include "madness/captcha_modal.html" %}
 
 <div style="display: none;">
     {# {% include "default/captcha.html" %} #}
@@ -62,60 +65,61 @@ var actionsList=[
             link: "#",
             action: 'play',
             icon: "/media/madness/img/play26.svg",
-            text: '{{_("Start")}}'
+            content: '{{_("Start")}}'
         },
         {
             active: false,
             link: "#",
             action: 'stop',
             icon: "/media/madness/img/stop8.svg",
-            text: '{{_("Stop")}}'
+            content: '{{_("Stop")}}'
         },
         {
             active: false,
             link: "#",
             action: 'cancel',
             icon: "/media/madness/img/x2.svg",
-            text: '{{_("Cancel")}}'
+            content: '{{_("Cancel")}}'
         },
         {
             active: false,
             link: "#",
             action: 'add',
             icon: "/media/madness/img/download61.svg",
-            text: '{{_("Add")}}'
+            content: '{{_("Add")}}'
         }
 ];
 var mainItems=[
     {
         active: {{ selected('home') }},
         icon: "/media/madness/img/dwelling1.svg",
-        text: '{{_("Home")}}',
+        content: '{{_("Home")}}',
         link: "/"
     },
     {
         active: {{ selected('queue') }},
         link: "/queue/",
         icon: "/media/madness/img/chronometer5.svg",
-        text: '{{_("Queue")}}'
+        content: '{{_("Queue")}}'
     },
     {
         active: {{ selected('collector') }},
         link: "/collector/",
         icon: "/media/madness/img/listing1.svg",
-        text: '{{_("Collector")}}'
+        content: '{{_("Collector")}}'
     },
     {
         active: {{ selected('downloads') }},
         link: "/downloads/",
         icon: "/media/madness/img/download60.svg",
-        text: '{{_("Downloads")}}'
+        content: '{{_("Downloads")}}'
     },
     {
         active: false,
         link: "#",
         icon: null,
-        text: 'Действия',
+        content: 'Действия',
+        action: 'actions',
         items: actionsList
     }
 ]
@@ -125,24 +129,24 @@ var auxItems=[
     {
         active: false,
         icon: "/media/madness/img/male18.svg",
-        text: '{{user.name}}',
+        content: '{{user.name}}',
         items :[
             {
                 active: false,
                 icon: "/media/madness/img/enter3.svg",
-                text: '{{_("Logout")}}',
+                content: '{{_("Logout")}}',
                 link: "/logout"
             },
             {
                 active: false,
                 icon: "/media/madness/img/male66.svg",
-                text: '{{_("Administrate")}}',
+                content: '{{_("Administrate")}}',
                 link: "/admin"
             },
             {
                 active: false,
                 icon: "/media/madness/img/information38.svg",
-                text: '{{_("Info")}}',
+                content: '{{_("Info")}}',
                 link: "/info"
             }
         ]
@@ -150,13 +154,13 @@ var auxItems=[
     {
         active: {{ selected('logs') }},
         icon: "/media/madness/img/seo2.svg",
-        text: '{{_("Logs")}}',
+        content: '{{_("Logs")}}',
         link: "/logs/"
     },
     {
         active: {{ selected('settings') }},
         icon: "/media/madness/img/setting.svg",
-        text: '{{_("Config")}}',
+        content: '{{_("Config")}}',
         link: "/settings/"
     },
 ]
@@ -164,26 +168,6 @@ var auxItems=[
 
 <script type="text/jsx">
 /** @jsx React.DOM */
-var indiv = (<div className="container">
-                <div className="navbar-header">
-                    <a href="#" className="navbar-brand">
-                        <div className="pyload-logo">
-                            <img src="/media/madness/img/pyloadlogo-01.svg" className="logo-img"></img>
-                            <span className="pyload-text">pyLoad</span>
-                        </div>
-                    </a>
-                    <button type="button" className="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span className="icon-bar"></span>
-                        <span className="icon-bar"></span>
-                        <span className="icon-bar"></span>
-                    </button>
-                </div>
-                <div className="navbar-collapse collapse in">
-                    <Menu items={mainItems} isright='false'/>
-                    <Menu items={auxItems} isright='true'/>
-                </div>
-            </div>
-            );
 
 function subscribeOnActionClick(elem){
     return function(){
@@ -191,7 +175,7 @@ function subscribeOnActionClick(elem){
         //$(elem).find('.action').click(onActionClick);
     };
 }
-React.renderComponent(indiv ,document.getElementById('navbar'),
+React.renderComponent(<BasepageHeader /> ,document.getElementById('navbar'),
             subscribeOnActionClick($('#navbar')));
 </script>
 

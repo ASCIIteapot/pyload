@@ -318,6 +318,11 @@ def edit_package():
 @route("/json/set_captcha", method="POST")
 @login_required('ADD')
 def set_captcha():
+
+    if request.json:
+        PYLOAD.setCaptchaResult(request.json[u"cap_id"], request.json[u"cap_result"])
+        return {'captcha': True}
+
     if request.environ.get('REQUEST_METHOD', "GET") == "POST":
         try:
             PYLOAD.setCaptchaResult(request.forms["cap_id"], request.forms["cap_result"])
@@ -334,7 +339,7 @@ def set_captcha():
         return {'captcha': False}
 
 @route("/json/get_captcha")
-@route("/json/get_captcha/<tid:int>")
+@route("/get_captcha/<tid:int>")
 def get_captcha(**kwargs):
     if 'tid' in kwargs:
         task = PYLOAD.core.captchaManager.getTaskByID(int(kwargs['tid']))
@@ -348,6 +353,7 @@ def get_captcha(**kwargs):
             pypackage = pyfile.package()
 
             ret_dict = {
+                'url': '/get_captcha/{}'.format(captcha_task.tid),
                 'file': {'fid': pyfile.id, 'name': pyfile.name},
                 'package': {'pid': pypackage.id, 'name': pypackage.name},
                 'plugin': plugin.__name__

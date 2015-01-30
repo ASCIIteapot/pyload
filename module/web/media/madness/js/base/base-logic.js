@@ -51,6 +51,8 @@ function onActionClick(elem){
         cancel:  "/api/stopAllDownloads"
     };
 
+    console.log('action: ', action_type);
+
     if(action_type in action_type_map){
         var req_params={
             method: 'get',
@@ -62,6 +64,9 @@ function onActionClick(elem){
     else{
         if(action_type == 'add'){
             $('#add_package_modal').modal();
+        }
+        else if(action_type == 'enter_captcha'){
+            captchaModalInstance.show();
         }
     }
 }

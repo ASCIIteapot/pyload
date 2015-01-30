@@ -6,147 +6,147 @@
 /*
  * Main app menu
  */
+var cx = React.addons.classSet;
 
-var MenuItem = React.createClass({
-  render: function() {
-    var cx = React.addons.classSet;
-    var classes = cx(this.props.classes);
+function menuItem(item) {
+    var def_state = {
+        action: null,
+        icon: null,
+        link: '#',
+        active: false,
+        content: null,
+        add_classes: {}
+    };
+    _.defaults(item, def_state);
+
+    var classes = {
+        'dropdown': true,
+        'active': item.active
+    };
+    _.extend(classes, item.add_classes);
+
     return (
-        <li className={classes}
-            key={this.props.action}
-            data-action={this.props.action}
-            onClick={onActionClick}>
-            <a href={this.props.link}
-               className={this.props.class} >
+        <li className={cs(classes)}
+        key={item.action}
+        data-action={item.action}
+        onClick={onActionClick}>
+            <a href={item.link} >
                 <div className="navbar-item">
-                    <img src={this.props.icon} className="icon"/>
-                    <span className="text">{this.props.text}</span>
+                    <img src={item.icon} className="icon"/>
+                    <span className="text">{item.content}</span>
                 </div>
             </a>
         </li>
-    );
-  }
-});
+        );
+}
 
-var DropdownMenuItem = React.createClass({
-  render: function() {
-    var convertedNodes=[];
+function dropdownMenuItem(item) {
+    var def_state = {
+        action: null,
+        icon: null,
+        content: null,
+        active: false,
+        add_classes: {},
+        items: []
+    };
+    _.defaults(item, def_state);
+    var convertedNodes = _.map(item.items, createSingleMenuItem);
 
-    this.props.items.forEach(function(item){
-        convertedNodes.push(createSingleMenuItem(item));
-    });
+    var classes = {
+        'dropdown': true,
+        'active': item.active
+    };
+    _.extend(classes, item.add_classes);
+
 
     return (
-        <li className='dropdown' key={this.props.action}>
-            <a href='#' className="dropdown-toggle"
-                data-toggle="dropdown" data-replace-tmp-key="6be2458a7786d2dfdb6b72d7583e8104">
+        <li className={cs(classes)} key={item.action}>
+            <a href='#' className="dropdown-toggle" data-toggle="dropdown">
                 <div className="navbar-item">
-                    <img src={this.props.icon} className={this.props.icon!=null ? "icon" : "hidden" }/>
-                    <span className="text">{this.props.text}</span>
+                    <img src={item.icon} className={item.icon != null ? "icon" : "hidden" }/>
+                    <span className="text">{item.content}</span>
                     <span className="caret"></span>
                 </div>
             </a>
             <ul className="dropdown-menu" role="menu">{convertedNodes}</ul>
-        </li>
-    );
-  }
-});
+        </li>);
+}
 
-function createSingleMenuItem(item, additionalClases){
-    if ('items' in item){
+function createSingleMenuItem(item, additionalClases) {
+    if ('items' in item) {
         // is dropdown
-        return (<DropdownMenuItem
-                isactive={item.active}
-                icon={item.icon}
-                text={item.text}
-                link={item.link}
-                items={item.items}/>);
+        return dropdownMenuItem(item);
     }
-    else{
-        // ordinal item
-
-        var classes = {
-            'active': item.active,
-            'action': item.action != null
-        };
-
-        if(item.action != null){
-            classes[item.action]=true;
-        }
-
-        $.extend(classes, additionalClases);
-
-        return (<MenuItem
-                action={'action' in item ? item.action : null}
-                classes={classes}
-                icon={item.icon}
-                text={item.text}
-                link={item.link}/>);
+    else {
+        return menuItem(item);
     }
 }
 
 
 var Menu = React.createClass({
-    render: function(){
-        var convertedNodes=[];
+    render: function () {
+        var convertedNodes = [];
 
-        this.props.items.forEach(function(item){
-            convertedNodes.push(createSingleMenuItem(item));
+        this.props.items.forEach(function (item) {
+            _.defaults(item, {
+                add_classes: {}
+            });
+            convertedNodes.push(createSingleMenuItem(item, item.add_classes));
         });
 
         return (<ul className={this.props.isright == 'true' ? "nav navbar-nav navbar-right" : "nav navbar-nav" }>
                     {convertedNodes}
-                </ul>);
+        </ul>);
     }
 });
 
 
 /*
-* server status control
-* */
+ * server status control
+ * */
 
 var ServerStatusControl = React.createClass({
-    getInitialState: function() {
+    getInitialState: function () {
         return {data: []};
     },
 
-    componentDidMount: function() {
+    componentDidMount: function () {
         this.loadCommentsFromServer();
         setInterval(this.loadCommentsFromServer, this.props.pollInterval);
     },
 
-    loadCommentsFromServer: function(){
+    loadCommentsFromServer: function () {
         $.ajax({
-          url: this.props.url,
-          dataType: 'json',
-          timeout: this.props.pollInterval,
-          success: function(data) {
-            this.setState(data);
-          }.bind(this),
-          error: function(xhr, status, err) {
-            console.error(this.props.url, status, err.toString());
-          }.bind(this)
+            url: this.props.url,
+            dataType: 'json',
+            timeout: this.props.pollInterval,
+            success: function (data) {
+                this.setState(data);
+            }.bind(this),
+            error: function (xhr, status, err) {
+                console.error(this.props.url, status, err.toString());
+            }.bind(this)
         });
     },
-    render: function(){
-        var serverActive=! this.state.pause;
+    render: function () {
+        var serverActive = !this.state.pause;
 
-        var filteredActionsList=actionsList.filter(function(item){
-            if(serverActive){
-                return item.action!='play';
+        var filteredActionsList = actionsList.filter(function (item) {
+            if (serverActive) {
+                return item.action != 'play';
             }
-            else{
-                return item.action!='stop';
+            else {
+                return item.action != 'stop';
             }
         });
 
-        var serverStatusItems = filteredActionsList.map(function(item){
+        var serverStatusItems = filteredActionsList.map(function (item) {
             return createSingleMenuItem(item, additionalClases = {'controls-group-item': true})
         });
 
         var headerItem = (<li className="header">
-                            <span>{serverActive ? 'Сервер запущен' : 'Сервер остановлен'}</span>
-                          </li>);
+            <span>{serverActive ? 'Сервер запущен' : 'Сервер остановлен'}</span>
+        </li>);
 
         serverStatusItems.splice(0, 0, headerItem);
 
@@ -161,43 +161,118 @@ var ServerStatusControl = React.createClass({
         });
 
         return (<div className="row server-status">
-                    <div className='col-md-6'>
-                        <div className={classesControls}>
-                            <ul className="controls-group">{serverStatusItems}</ul>
-                        </div>
-                    </div>
-                    <div className='col-md-4'>
-                        <div className={classesActiveState}>
-                            <ul className="controls-group">
-                                <li className='download-count-group'>
-                                    <span>
+            <div className='col-md-6'>
+                <div className={classesControls}>
+                    <ul className="controls-group">{serverStatusItems}</ul>
+                </div>
+            </div>
+            <div className='col-md-4'>
+                <div className={classesActiveState}>
+                    <ul className="controls-group">
+                        <li className='download-count-group'>
+                            <span>
                                         {this.props.l18n.active}
-                                        <span className='download-count'>{this.state.active}</span>
-                                        /
-                                        <span   className='download-count'
-                                                rel="tooltip"
-                                                data-toggle="tooltip"
-                                                data-placement="bottom"
-                                                title={this.props.l18n.queued}>
+                                <span className='download-count'>{this.state.active}</span>
+                            /
+                                <span   className='download-count'
+                                rel="tooltip"
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title={this.props.l18n.queued}>
                                             {this.state.queue}
-                                        </span>
-                                        /
-                                        <span   className='download-count'
-                                                rel="tooltip"
-                                                data-toggle="tooltip"
-                                                data-placement="bottom"
-                                                title={this.props.l18n.total}>
+                                </span>
+                            /
+                                <span   className='download-count'
+                                rel="tooltip"
+                                data-toggle="tooltip"
+                                data-placement="bottom"
+                                title={this.props.l18n.total}>
                                             {this.state.total}
-                                        </span>
-                                    </span>
-                                </li>
-                                <li>
-                                    <span>{this.props.l18n.speed} </span>
-                                    <span className='speed'>{this.state.speed}</span>
-                                </li>
-                            </ul>
-                        </div>
+                                </span>
+                            </span>
+                        </li>
+                        <li>
+                            <span>{this.props.l18n.speed} </span>
+                            <span className='speed'>{this.state.speed}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>);
+    }
+});
+
+/*
+ * Главное меню
+ * */
+
+
+
+var BasepageHeader = React.createClass({
+    getInitialState: function () {
+        var actions_item = _.find(mainItems,
+            function (menu_item) {
+                return 'actions' === _.property('action')(menu_item);
+            });
+        var actions_clone = _.clone(actions_item);
+
+        return {
+            main_items: mainItems,
+            aux_items: auxItems,
+            actions_item: actions_item,
+            actions_item_backup: actions_clone
+        }
+    },
+    captchaRecived: function (captcha) {
+        // console.log('captchaRecived', captcha);
+        var mainitems_clone = _.clone(this.state.main_items);
+
+        var new_actions = _.clone(this.state.actions_item_backup.items);
+
+        if(_.size(captcha) > 0){
+            this.state.actions_item.content =
+                (<span>
+                    {this.state.actions_item_backup.content}
+                    <span> </span>
+                    <span className="label label-info">captcha</span>
+                </span>);
+            var captcha_item = {
+                content: (<span>captcha <span className='badge'>{_.size(captcha)}</span></span>),
+                action: 'enter_captcha'
+            };
+
+            new_actions.push(captcha_item);
+        }
+        else{
+            this.state.actions_item.content = this.state.actions_item_backup.content;
+        }
+
+        this.state.actions_item.items = new_actions;
+
+        this.setState({main_items: mainitems_clone});
+    },
+    componentDidMount: function () {
+        captchaServiceInstance.captcha_recived.add(this.captchaRecived);
+    },
+    render: function () {
+        return (<div className="container">
+            <div className="navbar-header">
+                <a href="#" className="navbar-brand">
+                    <div className="pyload-logo">
+                        <img src="/media/madness/img/pyloadlogo-01.svg" className="logo-img"></img>
+                        <span className="pyload-text">pyLoad</span>
                     </div>
-                </div>);
+                </a>
+                <button type="button" className="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span className="icon-bar"></span>
+                    <span className="icon-bar"></span>
+                    <span className="icon-bar"></span>
+                </button>
+            </div>
+            <div className="navbar-collapse collapse in">
+                <Menu items={this.state.main_items} isright='false'/>
+                <Menu items={this.state.aux_items} isright='true'/>
+            </div>
+        </div>);
     }
 });

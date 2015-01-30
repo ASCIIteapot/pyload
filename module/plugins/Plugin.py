@@ -365,7 +365,7 @@ class Plugin(Base):
             result = ocr.get_captcha(temp_file.name)
         else:
             captchaManager = self.core.captchaManager
-            task = captchaManager.newTask(img, imgtype, temp_file.name, result_type)
+            task = captchaManager.newTask(img, imgtype, temp_file.name, self, result_type)
             self.cTask = task
             captchaManager.handleCaptcha(task)
 

@@ -41,7 +41,7 @@
 }
 
 .pyload-package .stat-count .value{
-    font-weight: lighter;
+    /* font-weight: lighter; */
 }
 
 /* progress */

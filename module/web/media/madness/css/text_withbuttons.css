@@ -3,7 +3,7 @@
 }
 
 .one-line-ellipsis,
-.text_wbuttons > div.text{
+.text_wbuttons .text{
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

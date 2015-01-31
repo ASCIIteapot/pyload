@@ -317,11 +317,11 @@ var Package = React.createClass({
                             insertglyph: false,
                             waituntil: true
                         });
-                        return <span>{tmarkup}</span>
+                        return <span className='text'>{tmarkup}</span>
                     }
                 }
                 else{
-                    return <span title={file.error}>{file.error}</span>;
+                    return <span className='text' title={file.error}>{file.error}</span>;
                 }
             }.bind(this);
 

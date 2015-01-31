@@ -8,7 +8,7 @@ var LinksInputElement=React.createClass({
     * Handle raw links text change
     * */
     handleLinksTextChange: function(event){
-        this.state.linksrawtext = this.refs.links_text_aria.getDOMNode().value;
+        this.setState({ linksrawtext: this.refs.links_text_aria.getDOMNode().value});
         console.log(this.state.linksrawtext);
         DoAjaxJsonRequest({
             url: '/json/parse_urls',

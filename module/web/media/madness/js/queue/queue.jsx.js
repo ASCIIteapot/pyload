@@ -667,7 +667,7 @@ var Package = React.createClass({
 
         var files_exists = this.state.show_files && ('links' in this.state.details());
 
-        var view_control= <div className='package-view-control-outer'>
+        var view_control= <div className='package-view-control-outer level_2'>
                                 <div className='package-view-control'>
                                     {this.create_button_vdom('show_details')}
                                     {this.create_button_vdom('show_files')}
@@ -675,7 +675,8 @@ var Package = React.createClass({
                             </div>;
 
         var package_classes = {
-            'pyload-package': true
+            'pyload-package': true,
+            'level_1': true
         };
         var state = this.state.details();
         if(state.linkstotal == state.linksdone && state.linkstotal>0){

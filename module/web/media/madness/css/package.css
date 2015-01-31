@@ -150,6 +150,7 @@
 
 .pyload-package .package-view-control{
     display: flex;
+    transform: translateY(-100%);
 }
 
 .pyload-package .package-view-control > button{
@@ -172,6 +173,18 @@
 /* Показ кнопок отображения файлов и деталей пакета по наведению указателя мыши на пакет */
 .pyload-package:not(:hover) .package-view-control-outer{
     display: none;
+}
+
+/* multi level hover */
+.level_1 {
+    width: 100%;
+    float: left;
+    position:relative;
+}
+
+.level_2 {
+    position: absolute;
+    width: 100%;
 }
 
 /*

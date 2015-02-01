@@ -131,7 +131,7 @@ function formatTime(args_dict){
     _.defaults(args_dict, {
         value: 0,
         waituntil: false,
-        inputype: null,
+        input_type: null,
         insertglyph: true
     });
 
@@ -140,7 +140,7 @@ function formatTime(args_dict){
         value = moment.unix(args_dict.value).diff(moment());
     }
 
-    var span = moment.duration(value, args_dict.inputype);
+    var span = moment.duration(value, args_dict.input_type);
 
     var glyph = <span className='glyphicon glyphicon-time'></span>;
     return <span className='eta time'>
@@ -304,7 +304,7 @@ var Package = React.createClass({
                             var eta = formatTime({
                                 value: stdata.eta,
                                 insertglyph: false,
-                                //input_type: 'ms'
+                                input_type: 'seconds'
                             });
                             items.push(eta);
                             items.push(speed);
